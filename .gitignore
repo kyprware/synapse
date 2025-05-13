@@ -1,0 +1,7 @@
+/dist
+/build
+/venv
+/.pytest_cache
+__pycache__
+
+*.spec
