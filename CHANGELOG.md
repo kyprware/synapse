@@ -20,6 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Extent .gitignore**: use public python .gitignore template.
+
 - **Initialize repository**: Set up project structure with initial files.
 
 [unreleased]: https://github.com/kyprware/synapse/compare/main
