@@ -1,7 +1,62 @@
-from fastapi import APIRouter, HTTPException
+from uuid import UUID
+from typing import Optional, List
+from fastapi import APIRouter, HTTPException, Query
 
-router = APIRouter()
+from ..services import agent_service
+from ..models.agent_model import  AgentModel
+from ..schemas.agent_schema import AgentSchema, AgentUpdateSchema, AgentResponseSchema
 
-@router.get("/agents/hello")
-def get_agent():
-    return { "data": "Hello World!" }
+
+router = APIRouter(prefix="/agents", tags=["Agents"])
+
+@router.post("/", response_model=AgentResponseSchema)
+def create_agent(agent_data: AgentSchema) -> AgentResponseSchema:
+    try:
+        agent = agent_service.create_agent(agent_data)
+        return { "detail": "Agent created successfully", "data": agent }
+    except Exception as error:
+        raise HTTPException(status_code=400, detail=str(error))
+
+
+@router.get("/", response_model=AgentResponseSchema)
+def list_agents(
+    sort_by: Optional[str] = Query("pk", description="Field to sort by (uuid, wake_url, etc.)")
+) -> AgentResponseSchema:
+    def filter_fn(agent: AgentModel) -> bool:
+        return True
+
+    def sort_fn(agent: AgentModel):
+        return getattr(agent, sort_by, agent.pk)
+
+    agents = agent_service.get_agents(filter_fn, sort_fn)
+    return { "detail": "Retrieved agents successfully", "data": agents }
+
+
+@router.get("/{agent_id}", response_model=AgentResponseSchema)
+def get_agent(agent_id: str) -> AgentResponseSchema:
+    agent = agent_service.get_agent(agent_id)
+
+    if not agent:
+        raise HTTPException(status_code=404, detail="Agent not found")
+
+    return { "detail": "Retrieved agent successfully", "data": agent }
+
+
+@router.put("/{agent_id}", response_model=AgentResponseSchema)
+def update_agent(agent_id: str, update_data: AgentUpdateSchema) -> AgentResponseSchema:
+    updated, agent = agent_service.update_agent(agent_id, update_data)
+
+    if not updated:
+        raise HTTPException(status_code=404, detail="Failed to update agent")
+
+    return { "detail": "Agent updated successfully", "data": agent }
+
+
+@router.delete("/{agent_id}", response_model=AgentResponseSchema)
+def delete_agent(agent_id: str) -> AgentResponseSchema:
+    deleted = agent_service.delete_agent(agent_id)
+
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Agent not found")
+
+    return { "detail": "Agent deleted successfully", "data": {} }

@@ -9,6 +9,7 @@ import uvicorn
 import websockets
 from fastapi import FastAPI
 from dotenv import load_dotenv
+
 from .socket.server import handle_connection
 from .handlers.agent_handler import router as agent_router
 
@@ -25,7 +26,7 @@ DEBUG: bool = bool(os.getenv("DEBUG", "true"))
 LOG_LEVEL: str = os.getenv("LOG_LEVEL", ("DEBUG" if DEBUG else "INFO")).upper()
 
 if LOG_LEVEL not in {"DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"}:
-    LOG_LEVEL = "INFO"
+    LOG_LEVEL: str = "INFO"
 
 app = FastAPI()
 logger = logging.getLogger(__name__)
