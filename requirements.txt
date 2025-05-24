@@ -1,3 +1,6 @@
-asyncio>=3.40
+asyncio>=3.4.0
 websockets>=15.0
 python-dotenv>=1.1.0
+fastapi>=0.115.0
+uvicorn>=0.34.0
+redis-om>=0.3.0

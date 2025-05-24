@@ -20,8 +20,3 @@ async def handle_connection(websocket: WebSocketServerProtocol) -> None:
             logger.debug(f"Received: {message}")
     except websockets.exceptions.ConnectionClosed:
         logger.info("Client disconnected")
-
-async def run(host: str, port: int) -> None:
-    server: Any = await websockets.serve(handle_connection, host, port)
-    logger.info(f"Synapse running at ws://{host}:{port}")
-    await server.wait_closed()
