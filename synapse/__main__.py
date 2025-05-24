@@ -6,7 +6,8 @@ import os
 import logging
 import asyncio
 from dotenv import load_dotenv
-from .socket import run as start_socket
+from .socket.server import run as start_socket
+
 
 load_dotenv()
 

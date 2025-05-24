@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Refactor codebase**: re-structure code to fit HSMS architecture.
 - **Create a simple socket server**: setup a websocket server.
 - **Extent .gitignore**: use public python .gitignore template.
 - **Initialize repository**: Set up project structure with initial files.

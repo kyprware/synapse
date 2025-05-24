@@ -2,7 +2,7 @@
 
 - [x] Move agent model to /models
 - [x] Create handlers and services folders
-- [ ] Split socket logic into socket_app.py
-- [ ] Refactor utils into /utils/common.py
-- [ ] Write new entry point in app.py
-- [ ] Update imports and run tests
+- [x] Split socket logic into socket_app.py
+- [x] Refactor utils into /utils/common.py
+- [x] Write new entry point in app.py
+- [x] Update imports and run tests
