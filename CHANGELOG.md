@@ -20,7 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **Create Agents management api*: build an agent service management backent.
+- **Create Agents management api**: build an agent service management backent.
 - **Create simple server**: create a simple api server with fastapi.
 - **Refactor codebase**: re-structure code to fit HSMS architecture.
 - **Create a simple socket server**: setup a websocket server.
