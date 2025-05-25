@@ -1,6 +1,6 @@
 import logging
 import requests
-from typing import Callable, Optional, List, Tuple
+from typing import Any, Callable, Optional, List, Tuple
 
 from ..models.agent_model import  AgentModel
 from ..schemas.wake_schema import WakeResponseSchema
@@ -30,7 +30,7 @@ def get_agent(agent_id: str) -> Optional[AgentModel]:
 
 def get_agents(
     filter_fn: Callable[[AgentModel], bool] = lambda agent: True,
-    sort_fn: Callable[[AgentModel], any] = lambda agent: agent.pk
+    sort_fn: Callable[[AgentModel], Any] = lambda agent: agent.pk
 ) -> List[AgentModel]:
     try:
         agents = [AgentModel.get(pk) for pk in AgentModel.all_pks()]
