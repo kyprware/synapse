@@ -34,4 +34,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Add agent UUID to header**: extent wake_ping request header with agent uuid.
 - **Re-word wake_url to ping_url**: re-word wake_url ro ping url
 
+### Fixed
+
+- **fixed ping request header**: send uuid in header instead of uuid dict.
+
 [unreleased]: https://github.com/kyprware/synapse/compare/main
