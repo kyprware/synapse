@@ -20,7 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **Create agent wake ping service**: Write agent server wake ping service.
+- **Create agent wake ping handler**: write agent server wake ping handler.
+- **Create agent wake ping service**: write agent server wake ping service.
 - **Create Agents management api**: build an agent service management backent.
 - **Create simple server**: create a simple api server with fastapi.
 - **Refactor codebase**: re-structure code to fit HSMS architecture.

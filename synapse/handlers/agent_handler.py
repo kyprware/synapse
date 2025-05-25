@@ -4,6 +4,7 @@ from fastapi import APIRouter, HTTPException, Query
 
 from ..services import agent_service
 from ..models.agent_model import  AgentModel
+from ..schemas.wake_schema import WakeRequestSchema, WakeResponseSchema
 from ..schemas.agent_schema import AgentSchema, AgentUpdateSchema, AgentResponseSchema
 
 
@@ -30,6 +31,15 @@ def list_agents(
 
     agents = agent_service.get_agents(filter_fn, sort_fn)
     return { "detail": "Retrieved agents successfully", "data": agents }
+
+
+@router.get("/ping", response_model=List[WakeResponseSchema])
+def wake_agents(request: WakeRequestSchema) -> List[WakeResponseSchema]:
+    try:
+        responses = agent_service.send_wake_ping(request.agent_ids)
+        return responses
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/{agent_id}", response_model=AgentResponseSchema)
