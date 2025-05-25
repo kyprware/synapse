@@ -87,7 +87,7 @@ def send_wake_ping(agent_ids: List[str]) -> List[WakeResponseSchema]:
 
             response = requests.get(url, headers={
                 "Authorization": f"Bearer {api_key}",
-                "X-Agent-UUID": {uuid},
+                "X-Agent-UUID": uuid,
                 "Content-Type": "application/json"
             }, timeout=5)
 
