@@ -27,10 +27,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Refactor codebase**: re-structure code to fit HSMS architecture.
 - **Create a simple socket server**: setup a websocket server.
 - **Extent .gitignore**: use public python .gitignore template.
-- **Initialize repository**: Set up project structure with initial files.
+- **Initialize repository**: set up project structure with initial files.
 
 ### Changed
 
+- **Add agent UUID to header**: extent wake_ping request header with agent uuid.
 - **Re-word wake_url to ping_url**: re-word wake_url ro ping url
 
 [unreleased]: https://github.com/kyprware/synapse/compare/main

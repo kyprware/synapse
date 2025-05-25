@@ -79,6 +79,7 @@ def send_wake_ping(agent_ids: List[str]) -> List[WakeResponseSchema]:
         try:
             agent = AgentModel.get(agent_id)
             api_key = agent.decrypted_api_key
+            uuid = getattr(agent, "uuid", None)
             url = getattr(agent, "ping_url", None)
 
             if not url:
@@ -86,6 +87,7 @@ def send_wake_ping(agent_ids: List[str]) -> List[WakeResponseSchema]:
 
             response = requests.get(url, headers={
                 "Authorization": f"Bearer {api_key}",
+                "X-Agent-UUID": {uuid},
                 "Content-Type": "application/json"
             }, timeout=5)
 
