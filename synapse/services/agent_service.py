@@ -1,4 +1,5 @@
 import logging
+import requests
 from typing import Callable, Optional, List, Tuple
 
 from ..models.agent_model import  AgentModel

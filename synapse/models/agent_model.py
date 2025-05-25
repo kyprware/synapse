@@ -9,7 +9,7 @@ from ..config.encryption_config import cipher
 class AgentModel(HashModel):
     uuid: str
     api_key: str
-    wake_url: str
+    ping_url: str
 
     class Meta:
         database = redis

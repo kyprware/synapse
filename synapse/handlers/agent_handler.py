@@ -20,7 +20,7 @@ def create_agent(agent_data: AgentSchema) -> AgentResponseSchema:
 
 @router.get("/", response_model=AgentResponseSchema)
 def list_agents(
-    sort_by: Optional[str] = Query("pk", description="Field to sort by (uuid, wake_url, etc.)")
+    sort_by: Optional[str] = Query("pk", description="Field to sort by (uuid, ping_url, etc.)")
 ) -> AgentResponseSchema:
     def filter_fn(agent: AgentModel) -> bool:
         return True

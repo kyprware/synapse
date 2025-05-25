@@ -27,4 +27,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Extent .gitignore**: use public python .gitignore template.
 - **Initialize repository**: Set up project structure with initial files.
 
+### Changed
+
+- **Re-word wake_url to ping_url**: re-word wake_url ro ping url
+
 [unreleased]: https://github.com/kyprware/synapse/compare/main
