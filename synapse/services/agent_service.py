@@ -3,6 +3,7 @@ import requests
 from typing import Callable, Optional, List, Tuple
 
 from ..models.agent_model import  AgentModel
+from ..schemas.wake_schema import WakeResponseSchema
 from ..schemas.agent_schema import AgentSchema, AgentUpdateSchema
 
 
@@ -69,3 +70,43 @@ def delete_agent(agent_id: str) -> bool:
     except Exception as error:
         logger.error(f"[DELETE] Failed to delete agent : {error}")
         return False
+
+
+def send_wake_ping(agent_ids: List[str]) -> List[WakeResponseSchema]:
+    responses: List[WakeResponseSchema] = []
+
+    for agent_id in agent_ids:
+        try:
+            agent = AgentModel.get(agent_id)
+            api_key = agent.decrypted_api_key
+            url = getattr(agent, "ping_url", None)
+
+            if not url:
+                raise ValueError(f"Agent '{agent_id}' missing ping_url")
+
+            response = requests.get(url, headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json"
+            }, timeout=5)
+
+            status_code = response.status_code
+            success = 200 <= status_code < 300
+
+            responses.append(WakeResponseSchema(
+                agent_id=agent_id,
+                url=url,
+                status_code=status_code,
+                success=success,
+                error=(None if success else response.text),
+            ))
+
+            logger.info(f"[WAKE] Agent '{agent_id}' wake request sent to {url} - Status {response.status_code}")
+        except Exception as error:
+            logger.error(f"[WAKE] Failed to wake agent '{agent_id}': {error}")
+            responses.append(WakeResponseSchema(
+                agent_id=agent_id,
+                success=False,
+                error=str(error),
+            ))
+
+    return responses

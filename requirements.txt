@@ -6,3 +6,4 @@ uvicorn>=0.34.0
 redis-om>=0.3.0
 pydantic>=2.11.0
 cryptography>=45.0
+requests>=2.32.0
