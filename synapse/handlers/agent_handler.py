@@ -5,16 +5,16 @@ from fastapi import APIRouter, HTTPException, Query
 from ..services import agent_service
 from ..models.agent_model import  AgentModel
 from ..schemas.wake_schema import WakeRequestSchema, WakeResponseSchema
-from ..schemas.agent_schema import AgentSchema, AgentUpdateSchema, AgentResponseSchema
+from ..schemas.agent_schema import AgentCreateSchema, AgentUpdateSchema, AgentResponseSchema
 
 
 router = APIRouter(prefix="/agents", tags=["Agents"])
 
 @router.post("/", response_model=AgentResponseSchema)
-def create_agent(agent_data: AgentSchema) -> AgentResponseSchema:
+def create_agent(agent_data: AgentCreateSchema) -> AgentResponseSchema:
     try:
         agent = agent_service.create_agent(agent_data)
-        return { "detail": "Agent created successfully", "data": agent }
+        return AgentResponseSchema(detail="Agent created successfully", data=agent)
     except Exception as error:
         raise HTTPException(status_code=400, detail=str(error))
 
@@ -23,14 +23,15 @@ def create_agent(agent_data: AgentSchema) -> AgentResponseSchema:
 def list_agents(
     sort_by: Optional[str] = Query("pk", description="Field to sort by (uuid, ping_url, etc.)")
 ) -> AgentResponseSchema:
-    def filter_fn(agent: AgentModel) -> bool:
+    def filter_fn(_: AgentModel) -> bool:
         return True
 
     def sort_fn(agent: AgentModel):
-        return getattr(agent, sort_by, agent.pk)
+        key = sort_by or "pk"
+        return getattr(agent, key)
 
     agents = agent_service.get_agents(filter_fn, sort_fn)
-    return { "detail": "Retrieved agents successfully", "data": agents }
+    return AgentResponseSchema(detail="Retrieved agents successfully", data=agents)
 
 
 @router.get("/ping", response_model=List[WakeResponseSchema])
@@ -49,7 +50,7 @@ def get_agent(agent_id: str) -> AgentResponseSchema:
     if not agent:
         raise HTTPException(status_code=404, detail="Agent not found")
 
-    return { "detail": "Retrieved agent successfully", "data": agent }
+    return AgentResponseSchema(detail="Retrieved agent successfully", data=agent)
 
 
 @router.put("/{agent_id}", response_model=AgentResponseSchema)
@@ -59,7 +60,7 @@ def update_agent(agent_id: str, update_data: AgentUpdateSchema) -> AgentResponse
     if not updated:
         raise HTTPException(status_code=404, detail="Failed to update agent")
 
-    return { "detail": "Agent updated successfully", "data": agent }
+    return AgentResponseSchema(detail="Agent updated successfully", data=agent)
 
 
 @router.delete("/{agent_id}", response_model=AgentResponseSchema)
@@ -69,4 +70,4 @@ def delete_agent(agent_id: str) -> AgentResponseSchema:
     if not deleted:
         raise HTTPException(status_code=404, detail="Agent not found")
 
-    return { "detail": "Agent deleted successfully", "data": {} }
+    return AgentResponseSchema(detail="Agent deleted successfully", data={})

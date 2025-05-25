@@ -4,12 +4,12 @@ from typing import Any, Callable, Optional, List, Tuple
 
 from ..models.agent_model import  AgentModel
 from ..schemas.wake_schema import WakeResponseSchema
-from ..schemas.agent_schema import AgentSchema, AgentUpdateSchema
+from ..schemas.agent_schema import AgentCreateSchema, AgentUpdateSchema
 
 
 logger = logging.getLogger(__name__)
 
-def create_agent(agent_data: AgentSchema) -> Optional[AgentModel]:
+def create_agent(agent_data: AgentCreateSchema) -> Optional[AgentModel]:
     try:
         agent = AgentModel(**agent_data.model_dump())
         logger.info(f"[CREATE] Agent {agent.pk} created successfully:")
@@ -29,7 +29,7 @@ def get_agent(agent_id: str) -> Optional[AgentModel]:
 
 
 def get_agents(
-    filter_fn: Callable[[AgentModel], bool] = lambda agent: True,
+    filter_fn: Callable[[AgentModel], bool] = lambda _: True,
     sort_fn: Callable[[AgentModel], Any] = lambda agent: agent.pk
 ) -> List[AgentModel]:
     try:
@@ -47,7 +47,7 @@ def update_agent(agent_id: str, update_data: AgentUpdateSchema) -> Tuple[bool, O
         updated = False
         agent = AgentModel.get(agent_id)
 
-        for field, value in update_data.dict(exclude_unset=True).items():
+        for field, value in update_data.model_dump(exclude_unset=True).items():
             if hasattr(agent, field):
                 setattr(agent, field, value)
                 updated = True
@@ -108,7 +108,7 @@ def send_wake_ping(agent_ids: List[str]) -> List[WakeResponseSchema]:
             responses.append(WakeResponseSchema(
                 agent_id=agent_id,
                 success=False,
-                error=str(error),
+                error=str(error)
             ))
 
     return responses

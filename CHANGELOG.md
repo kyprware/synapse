@@ -31,11 +31,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Improve code style**: make agent service and handler more predictable
 - **Add agent UUID to header**: extent wake_ping request header with agent uuid.
 - **Re-word wake_url to ping_url**: re-word wake_url ro ping url
 
 ### Fixed
 
+- **Bug fixes**: update agent model, agent schema, agent service and handler.
 - **fixed ping request header**: send uuid in header instead of uuid dict.
 
 [unreleased]: https://github.com/kyprware/synapse/compare/main

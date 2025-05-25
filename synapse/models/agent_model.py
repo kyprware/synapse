@@ -1,10 +1,12 @@
 import base64
-import secrets
+import logging
 from redis_om import HashModel
 
 from ..config.db_config import redis
 from ..config.encryption_config import cipher
 
+
+logger = logging.getLogger(__name__)
 
 class AgentModel(HashModel):
     uuid: str
@@ -27,7 +29,8 @@ class AgentModel(HashModel):
             encrypted_bytes = base64.b64decode(value)
             cipher.decrypt(encrypted_bytes)
             return True
-        except Exception:
+        except Exception as error:
+            logger.debug(f"[Model] Failed to assert api key ecrypted: {error}")
             return False
 
     @property
@@ -37,5 +40,6 @@ class AgentModel(HashModel):
                 decoded_bytes = base64.b64decode(self.api_key)
                 decrypted_bytes = cipher.decrypt(decoded_bytes)
                 return decrypted_bytes.decode("utf-8")
-            except Exception as e:
-                return ""
+            except Exception as error:
+                logger.debug(f"[Model] Failed to decrypt api key: {error}")
+        return ""
