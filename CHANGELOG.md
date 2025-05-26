@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Add socket client validation**: verify if client socket is in agent database.
 - **Create agent wake ping handler**: write agent server wake ping handler.
 - **Create agent wake ping service**: write agent server wake ping service.
 - **Create Agents management api**: build an agent service management backent.
