@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  server:
+    build: .
+    command: python -m synapse
+    volumes:
+      - .:/app
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+
+  test:
+    build: .
+    command: pytest
+    volumes:
+      - .:/app
+    depends_on:
+      - server
+    env_file:
+      - .env
