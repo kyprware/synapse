@@ -1,7 +1,3 @@
-synapse/proto/buffers/
-synapse/proto/buffers/*.py
-synapse/proto/buffers/*.pyc
-
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
