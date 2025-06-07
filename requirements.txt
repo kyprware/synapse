@@ -1,5 +1,7 @@
 PyJWT>=2.10.0
+psycopg>=3.2.9
 asyncio>=3.4.0
 pydantic>=2.11.0
+SQLAlchemy>=2.0.41
 cryptography>=45.0.0
 python-dotenv>=1.1.0
