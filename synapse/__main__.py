@@ -3,28 +3,66 @@ Module entry point to configure project, load configurations/variables and run
 the project.
 """
 
-import os
+import ssl
+import asyncio
 import logging
+from os import getenv
 from dotenv import load_dotenv
+
+from .server import handle_client
 
 load_dotenv()
 
-HOST: str = os.getenv("HOST", "localhost")
-DEBUG: bool = bool(os.getenv("DEBUG", "true"))
-SERVER_HOST: str = os.getenv("SERVER_HOST", HOST)
-SERVER_PORT: int = int(os.getenv("SERVER_PORT", "8080"))
+HOST: str = getenv("HOST", "localhost")
+PORT: int = int(getenv("PORT", "8080"))
 
-LOG_LEVEL: str = os.getenv("LOG_LEVEL", ("DEBUG" if DEBUG else "INFO")).upper()
+KEY_FILE: str = getenv("TLS_KEY", "key.pem")
+CERT_FILE: str = getenv("TLS_CERT", "cert.pem")
+
+DEBUG: bool = bool(getenv("DEBUG", 1))
+LOG_LEVEL: str = getenv("LOG_LEVEL", ("DEBUG" if DEBUG else "INFO")).upper()
+
 
 if LOG_LEVEL not in {"DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"}:
     LOG_LEVEL: str = "INFO"
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 logging.basicConfig(
     format="[%(asctime)s] [%(levelname)s] %(message)s",
     level=getattr(logging, LOG_LEVEL)
 )
 
+async def main() -> None:
+    """
+    Starts an asynchronous SSL-enabled server for handling client connections.
+    """
+
+    context: ssl.SSLContext = ssl.create_default_context(
+        ssl.Purpose.CLIENT_AUTH
+    )
+    context.load_cert_chain(certfile=CERT_FILE, keyfile=KEY_FILE)
+
+    server: asyncio.AbstractServer = await asyncio.start_server(
+        client_connected_cb=handle_client,
+        ssl=context,
+        host=HOST,
+        port=PORT
+    )
+
+    addr: str = ", ".join(
+        str(sock.getsockname())
+        for sock in server.sockets or []
+    )
+    logger.info(f"[BOOT] Synapse server running on {addr}")
+
+    async with server:
+        await server.serve_forever()
+
 if __name__ == "__main__":
-    logger.info("Starting synapse servers...")
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        logger.info("[BOOT] Server shutdown requested.")
+    except Exception as err:
+        logger.exception(f"[BOOT] Error during server startup: {err}")
