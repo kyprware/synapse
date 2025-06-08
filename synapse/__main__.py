@@ -1,65 +1,68 @@
 """
-Module entry point to configure project and load configurations and variables.
+Module entry point to configure project, load configurations/variables and run
+the project.
 """
 
-import os
-import logging
+import ssl
 import asyncio
-import uvicorn
-import websockets
-from fastapi import FastAPI
+import logging
+from os import getenv
 from dotenv import load_dotenv
 
-from .socket.server import handle_connection
-from .handlers.agent_handler import router as agent_router
-
+from .server import handle_client
 
 load_dotenv()
 
-HOST: str = os.getenv("HOST", "localhost")
-SERVER_HOST: str = os.getenv("SERVER_HOST", HOST)
-SOCKET_HOST: str = os.getenv("SOCKET_HOST", HOST)
-SERVER_PORT: int = int(os.getenv("SERVER_PORT", "5050"))
-SOCKET_PORT: int = int(os.getenv("SOCKET_PORT", "8765"))
+HOST: str = getenv("HOST", "localhost")
+PORT: int = int(getenv("PORT", "8080"))
 
-DEBUG: bool = bool(os.getenv("DEBUG", "true"))
-LOG_LEVEL: str = os.getenv("LOG_LEVEL", ("DEBUG" if DEBUG else "INFO")).upper()
+KEY_FILE: str = getenv("TLS_KEY", "key.pem")
+CERT_FILE: str = getenv("TLS_CERT", "cert.pem")
+
+DEBUG: bool = bool(getenv("DEBUG", 1))
+LOG_LEVEL: str = getenv("LOG_LEVEL", ("DEBUG" if DEBUG else "INFO")).upper()
+
 
 if LOG_LEVEL not in {"DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"}:
     LOG_LEVEL: str = "INFO"
 
-app = FastAPI()
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 logging.basicConfig(
     format="[%(asctime)s] [%(levelname)s] %(message)s",
     level=getattr(logging, LOG_LEVEL)
 )
-app.include_router(agent_router, prefix="/api")
-
-async def run_server(host: str, port: int, log_level: str) -> None:
-    config = uvicorn.Config(app, host=host, port=port, log_level=log_level.lower())
-    server = uvicorn.Server(config)
-    logger.info(f"Synapse server running at http://{host}:{port}")
-    await server.serve()
-
-async def run_socket(host: str, port: int) -> None:
-    server = await websockets.serve(handle_connection, host, port)
-    logger.info(f"Synapse socket running at ws://{host}:{port}")
-    await server.wait_closed()
 
 async def main() -> None:
-    await asyncio.gather(
-        run_server(SERVER_HOST, SERVER_PORT, LOG_LEVEL),
-        run_socket(SOCKET_HOST, SOCKET_PORT)
+    """
+    Starts an asynchronous SSL-enabled server for handling client connections.
+    """
+
+    context: ssl.SSLContext = ssl.create_default_context(
+        ssl.Purpose.CLIENT_AUTH
+    )
+    context.load_cert_chain(certfile=CERT_FILE, keyfile=KEY_FILE)
+
+    server: asyncio.AbstractServer = await asyncio.start_server(
+        client_connected_cb=handle_client,
+        ssl=context,
+        host=HOST,
+        port=PORT
     )
 
-if __name__ == "__main__":
-    logger.info("Starting synapse servers...")
+    addr: str = ", ".join(
+        str(sock.getsockname())
+        for sock in server.sockets or []
+    )
+    logger.info(f"[BOOT] Synapse server running on {addr}")
 
+    async with server:
+        await server.serve_forever()
+
+if __name__ == "__main__":
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
-        logger.info("Servers shutting down.")
-    except Exception as error:
-        logger.exception(f"Unexpected error: {error}")
+        logger.info("[BOOT] Server shutdown requested.")
+    except Exception as err:
+        logger.exception(f"[BOOT] Error during server startup: {err}")

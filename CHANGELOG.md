@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased RPC]
+
 ## [Unreleased]
 
 ### Added
@@ -41,4 +43,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Bug fixes**: update agent model, agent schema, agent service and handler.
 - **fixed ping request header**: send uuid in header instead of uuid dict.
 
+[unreleased RPC]: https://github.com/kyprware/synapse/compare/main
 [unreleased]: https://github.com/kyprware/synapse/compare/main
