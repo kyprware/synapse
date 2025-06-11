@@ -7,9 +7,11 @@ import ssl
 import asyncio
 import logging
 from os import getenv
+
 from dotenv import load_dotenv
 
-from .server import handle_client
+from .peer import handle_peer
+
 
 load_dotenv()
 
@@ -19,7 +21,7 @@ PORT: int = int(getenv("PORT", "8080"))
 KEY_FILE: str = getenv("TLS_KEY", "key.pem")
 CERT_FILE: str = getenv("TLS_CERT", "cert.pem")
 
-DEBUG: bool = bool(getenv("DEBUG", 1))
+DEBUG: bool = bool(getenv("DEBUG", True))
 LOG_LEVEL: str = getenv("LOG_LEVEL", ("DEBUG" if DEBUG else "INFO")).upper()
 
 
@@ -33,9 +35,14 @@ logging.basicConfig(
     level=getattr(logging, LOG_LEVEL)
 )
 
+
 async def main() -> None:
     """
-    Starts an asynchronous SSL-enabled server for handling client connections.
+    Starts the asynchronous SSL-enabled JSON-RPC server.
+
+    The server listens on the configured host and port, handles incoming
+    connections using the `handle_peer` function, and uses SSL certificates
+    for secure communication.
     """
 
     context: ssl.SSLContext = ssl.create_default_context(
@@ -44,20 +51,18 @@ async def main() -> None:
     context.load_cert_chain(certfile=CERT_FILE, keyfile=KEY_FILE)
 
     server: asyncio.AbstractServer = await asyncio.start_server(
-        client_connected_cb=handle_client,
+        client_connected_cb=handle_peer,
         ssl=context,
         host=HOST,
         port=PORT
     )
 
-    addr: str = ", ".join(
-        str(sock.getsockname())
-        for sock in server.sockets or []
-    )
-    logger.info(f"[BOOT] Synapse server running on {addr}")
+    for sock in server.sockets or []:
+        logger.info(f"[BOOT] Synapse server running on {sock.getsockname()}")
 
     async with server:
         await server.serve_forever()
+
 
 if __name__ == "__main__":
     try:
