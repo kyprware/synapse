@@ -66,8 +66,6 @@ def serialize_payload(obj: Union[BaseModel, list, dict]) -> Union[dict, list]:
     elif isinstance(obj, dict):
         return {k: serialize_payload(v) for k, v in obj.items()}
 
-    return obj
-
 
 def encode_payload(payload: RPCPayload) -> bytes:
     """
