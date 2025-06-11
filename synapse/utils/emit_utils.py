@@ -31,13 +31,11 @@ async def emit_message(
     encoded: bytes = encode_payload(payload)
 
     for writer in writers:
+        name: str = writer.get_extra_info("peername")
+
         try:
             writer.write(encoded)
             await writer.drain()
-            logger.debug(f"[EMIT] Sent payload to {
-                writer.get_extra_info("peername")
-            }")
+            logger.debug(f"[EMIT] Sent payload to {name}")
         except Exception as err:
-            logger.error(f"[EMIT] Failed to send payload to {
-                writer.get_extra_info("peername")
-            }: {err}")
+            logger.error(f"[EMIT] Failed to send payload to {name}: {err}")
