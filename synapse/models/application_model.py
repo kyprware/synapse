@@ -1,13 +1,16 @@
 import base64
 import logging
-from typing import Final
+
+from typing import Final, Optional
+
 from sqlalchemy import String
-from sqlalchemy.orm import validates, DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.orm import DeclarativeBase, Mapped, validates, mapped_column
 
 from ..config.encryption_config import cipher
 
 
 logger: Final[logging.Logger] = logging.getLogger(__name__)
+
 
 class Application(DeclarativeBase):
     """
@@ -18,28 +21,31 @@ class Application(DeclarativeBase):
 
     id: Mapped[str] = mapped_column(String, primary_key=True)
     uri: Mapped[str] = mapped_column(String, nullable=False)
-    authorization_token: Mapped[str | None] = mapped_column(
+    authorization_token: Mapped[Optional[str]] = mapped_column(
         String, nullable=True
     )
 
 
     def __repr__(self) -> str:
         """
-        Express model self as a string
+        String representation of model object
         """
 
         return f"<Application(id='{self.id}')>"
 
 
-    @validates("authorization_toke")
-    def _encrypt_token(self, _: str, value: str | None) -> str | None:
+    @validates("authorization_token")
+    def _encrypt_token(self, _: str, value: Optional[str]) -> Optional[str]:
         """
         Encrypts the authorization token before storing it.
         """
 
         if value and not self._is_already_encrypted(value):
-            encrypted_bytes: bytes = cipher.encrypt(value.encode("utf-8"))
-            return base64.b64encode(encrypted_bytes).decode("utf-8")
+            try:
+                encrypted_bytes: bytes = cipher.encrypt(value.encode("utf-8"))
+                return base64.b64encode(encrypted_bytes).decode("utf-8")
+            except Exception as err:
+                logger.debug(f"[Model] Encryption failed: {err}")
 
         return value
 
