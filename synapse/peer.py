@@ -74,7 +74,7 @@ async def handle_peer(
 
             response: List[RPCResponse] = await dispatch_rpcs(
                 dispatcher,
-                *cast(List[RPCRequest], payload)
+                *cast(List[RPCRequest], batch_payload)
             )
 
             # broadcast response based on priviledge
