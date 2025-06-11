@@ -8,7 +8,7 @@ import json
 import struct
 import asyncio
 import logging
-from typing import Optional, Union, Any, Dict
+from typing import Optional, Union, Any, Dict, cast
 
 from pydantic import BaseModel
 
@@ -113,11 +113,11 @@ async def decode_payload(
         if isinstance(decoded_json, dict):
             return parse_rpc_object(decoded_json)
         elif isinstance(decoded_json, list):
-            return [
+            return cast(RPCPayload, [
                 parse_rpc_object(item)
                 for item in decoded_json
                 if isinstance(item, dict)
-            ]
+            ])
 
     except (json.JSONDecodeError, struct.error) as err:
         logger.error(f"[DECODE] Failed to decode message: {err}")
