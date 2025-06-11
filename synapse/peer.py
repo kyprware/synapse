@@ -1,0 +1,100 @@
+"""
+Asynchronous JSON-RPC TCP handler module.
+
+Handles incoming JSON-RPC requests, notifications, and responses over a
+TCP stream using asyncio streams.
+"""
+
+import asyncio
+import logging
+from typing import Optional, Tuple, List, cast
+
+from .types.rpc_types import RPCBatchData, RPCPayload
+from .utils.emit_utils import emit_message
+from .utils.payload_utils import decode_payload
+from .utils.dispatch_utils import dispatch_rpcs
+from .handlers.application_handlers import dispatcher
+from .schemas.rpc_schema import (
+    RPCNotification,
+    RPCResponse,
+    RPCRequest,
+    RPCError
+)
+
+
+logger: logging.Logger = logging.getLogger(__name__)
+connected_applications: set[asyncio.StreamWriter] = set()
+
+
+async def handle_peer(
+    reader: asyncio.StreamReader,
+    writer: asyncio.StreamWriter
+) -> None:
+    """
+    Handles an individual JSON-RPC session with a connected application.
+
+    Reads a single payload from the TCP stream, determines its type
+    (notification, request, or response), and dispatches or broadcasts
+    accordingly.
+
+    Args:
+        reader (asyncio.StreamReader): The stream reader for the connection.
+        writer (asyncio.StreamWriter): The stream writer for the connection.
+    """
+
+    peer: Optional[Tuple[str, int]] = writer.get_extra_info("peername")
+    logger.info(f"[CONNECTION] Connection from {peer}")
+    connected_applications.add(writer)
+
+    try:
+        payload: Optional[RPCPayload] = await decode_payload(reader)
+
+        if not payload:
+            return None
+
+        if isinstance(payload, RPCNotification):
+            # emit notification based on priviledge
+            await emit_message(payload, connected_applications)
+
+        batch_payload: RPCBatchData = (
+                [payload] if not isinstance(payload, list) else payload
+        )
+
+        if all(isinstance(p, RPCResponse) for p in payload):
+            # emit response based on priviledge
+            await emit_message((
+                batch_payload if len(batch_payload) > 1 else batch_payload[0]
+            ), connected_applications)
+        elif all(isinstance(p, RPCRequest) for p in payload):
+            # emit request based on priviledge
+            await emit_message((
+                batch_payload if len(batch_payload) > 1 else batch_payload[0]
+            ), connected_applications)
+
+            response: List[RPCResponse] = await dispatch_rpcs(
+                dispatcher,
+                *cast(List[RPCRequest], payload)
+            )
+
+            # broadcast response based on priviledge
+            await emit_message((
+                response if len(response) > 1 else response[0]
+            ), connected_applications)
+        else:
+            await emit_message(RPCResponse(
+                id=None,
+                error=RPCError(
+                    code=-32603,
+                    message=f"Invalid Request(s): {batch_payload}"
+                )
+            ), connected_applications)
+
+    except asyncio.IncompleteReadError as err:
+        logger.error(f"[CONN] {peer} disconnected unexpectedly: {err}")
+    except Exception as err:
+        logger.exception(f"[CONN] Unexpected error from {peer}: {err}")
+    finally:
+        connected_applications.discard(writer)
+        writer.close()
+        await writer.wait_closed()
+        logger.info(f"[CONN] Connection closed {peer}")
