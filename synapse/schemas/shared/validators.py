@@ -1,18 +1,18 @@
 """
-Shared schema validation modules
+Shared schema validation functions for JSON-RPC and related formats.
 """
 
 import base64
 from uuid import UUID
-from urllib.parse import urlparse
-
 from typing import List, Any
-from urllib.parse import ParseResult
+
+from urllib.parse import urlparse, ParseResult
 
 
-def validate_jsonrpc_version(_, v: str) -> str:
+def validate_jsonrpc_version(_: Any, v: str) -> str:
     """
-    Validates that the jsonrpc version is supported
+    Validates that the jsonrpc version is '2.0'.
+    Raises ValueError if not.
     """
 
     if v != "2.0":
@@ -21,9 +21,10 @@ def validate_jsonrpc_version(_, v: str) -> str:
     return v
 
 
-def validate_uuid(_, v: str) -> str:
+def validate_uuid(_: Any, v: str) -> str:
     """
     Validates that the input string is a valid UUID.
+    Raises ValueError on failure.
     """
 
     try:
@@ -36,10 +37,12 @@ def validate_uuid(_, v: str) -> str:
 
 def validate_jwt(_: Any, v: str) -> str:
     """
-    Validates that a string is a properly formatted JWT token.
+    Validates that a string has the structure of a valid JWT:
+    - 3 parts separated by dots
+    - Each part base64-decodable
     """
 
-    parts: List = v.split('.')
+    parts: List[str] = v.split('.')
 
     if len(parts) != 3:
         raise ValueError("JWT must have exactly 3 parts separated by '.'")
@@ -54,10 +57,9 @@ def validate_jwt(_: Any, v: str) -> str:
     return v
 
 
-
-def validate_jsonrpc_2_error_codes(_, v: int) -> int:
+def validate_jsonrpc_error_codes(_, v: int) -> int:
     """
-    Validates JSON-RPC error code.
+    Validates that a given error code is valid according to JSON-RPC 2.0 spec.
     """
 
     VALID_JSONRPC_2_ERROR_CODES: list[int] = [
@@ -77,7 +79,7 @@ def validate_jsonrpc_2_error_codes(_, v: int) -> int:
 
 def validate_url(_, v: str) -> str:
     """
-    Validates that the input string is a well-formed URL.
+    Validates that a string is a well-formed URL with scheme and netloc.
     """
 
     parsed: ParseResult = urlparse(v)

@@ -1,5 +1,5 @@
 """
-Schemas for JSON-RPC requests and responses.
+Schemas for JSON-RPC 2.0 requests and responses.
 """
 
 from pydantic import BaseModel, field_validator
@@ -7,46 +7,48 @@ from pydantic import BaseModel, field_validator
 from typing import Optional, Union, Any
 
 from .shared.validators import (
-    validate_jwt,
     validate_uuid,
     validate_jsonrpc_version,
-    validate_jsonrpc_2_error_codes
+    validate_jsonrpc_error_codes
 )
 
 
 class RPCRequest(BaseModel):
     """
-    Base schema for authenticated JSON-RPC requests.
+    JSON-RPC 2.0 request schema for authenticated method calls.
+
+    Fields:
+        jsonrpc (str): JSON-RPC version. Defaults to "2.0".
+        id (str | None): Optional request identifier.
+        method (str): Name of the method to be invoked.
+        params (dict | None): Optional parameters for the method.
     """
 
     jsonrpc: str = "2.0"
     id: Union[str, None]
     method: str
     params: Optional[dict[str, Any]] = None
-    authorization_token: str
 
     @field_validator("jsonrpc")
     @classmethod
-    def jsonrpc_validator(cls, v: str) -> str:
+    def validate_jsonrpc(cls, v: str) -> str:
         return validate_jsonrpc_version(cls, v)
+
 
     @field_validator("id")
     @classmethod
-    def uuid_validator(cls, v: Union[str, None]) -> Union[str, None]:
-        if not v:
-            return None
-
-        return validate_uuid(cls, v)
-
-    @field_validator("authorization_token")
-    @classmethod
-    def authorization_token_validator(cls, v: str) -> str:
-        return validate_jwt(cls, v)
+    def validate_id(cls, v: Union[str, None]) -> Union[str, None]:
+        return validate_uuid(cls, v) if v else None
 
 
 class RPCError(BaseModel):
     """
-    Standard JSON-RPC error format.
+    JSON-RPC 2.0 error object schema.
+
+    Fields:
+        code (int): A predefined JSON-RPC error code.
+        message (str): A human-readable error message.
+        data (list | dict | None): Optional additional error information.
     """
 
     code: int
@@ -55,13 +57,19 @@ class RPCError(BaseModel):
 
     @field_validator("code")
     @classmethod
-    def code_validator(cls, v: int) -> int:
-        return validate_jsonrpc_2_error_codes(cls, v)
+    def validate_code(cls, v: int) -> int:
+        return validate_jsonrpc_error_codes(cls, v)
 
 
 class RPCResponse(BaseModel):
     """
-    Standard JSON-RPC response.
+    JSON-RPC 2.0 response schema.
+
+    Fields:
+        jsonrpc (str): JSON-RPC version. Defaults to "2.0".
+        id (str | None): The ID of the request.
+        result (Any | None): Result returned by the method, if successful.
+        error (RPCError | None): Error object, if an error occurred.
     """
 
     jsonrpc: str = "2.0"
@@ -71,21 +79,24 @@ class RPCResponse(BaseModel):
 
     @field_validator("jsonrpc")
     @classmethod
-    def jsonrpc_validator(cls, v: str) -> str:
+    def validate_jsonrpc(cls, v: str) -> str:
         return validate_jsonrpc_version(cls, v)
+
 
     @field_validator("id")
     @classmethod
-    def uuid_validator(cls, v: Union[str, None]) -> Union[str, None]:
-        if not v:
-            return None
-
-        return validate_uuid(cls, v)
+    def validate_id(cls, v: Union[str, None]) -> Union[str, None]:
+        return validate_uuid(cls, v) if v else None
 
 
 class RPCNotification(BaseModel):
     """
-    Base schema for JSON-RPC notification.
+    JSON-RPC 2.0 notification schema (no response expected).
+
+    Fields:
+        jsonrpc (str): JSON-RPC version. Defaults to "2.0".
+        method (str): Name of the method to be invoked.
+        params (dict | None): Optional parameters for the method.
     """
 
     jsonrpc: str = "2.0"
@@ -94,5 +105,5 @@ class RPCNotification(BaseModel):
 
     @field_validator("jsonrpc")
     @classmethod
-    def jsonrpc_validator(cls, v: str) -> str:
+    def validate_jsonrpc(cls, v: str) -> str:
         return validate_jsonrpc_version(cls, v)
