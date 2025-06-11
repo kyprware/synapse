@@ -55,17 +55,18 @@ async def handle_peer(
         if isinstance(payload, RPCNotification):
             # emit notification based on priviledge
             await emit_message(payload, connected_applications)
+            return None
 
-        batch_payload: RPCBatchData = (
-                [payload] if not isinstance(payload, list) else payload
+        batch_payload: RPCBatchData = cast(RPCBatchData,
+            [payload] if not isinstance(payload, list) else payload
         )
 
-        if all(isinstance(p, RPCResponse) for p in payload):
+        if all(isinstance(p, RPCResponse) for p in batch_payload):
             # emit response based on priviledge
             await emit_message((
                 batch_payload if len(batch_payload) > 1 else batch_payload[0]
             ), connected_applications)
-        elif all(isinstance(p, RPCRequest) for p in payload):
+        elif all(isinstance(p, RPCRequest) for p in batch_payload):
             # emit request based on priviledge
             await emit_message((
                 batch_payload if len(batch_payload) > 1 else batch_payload[0]
@@ -77,7 +78,7 @@ async def handle_peer(
             )
 
             # broadcast response based on priviledge
-            await emit_message((
+            await emit_message(cast(RPCPayload,
                 response if len(response) > 1 else response[0]
             ), connected_applications)
         else:
@@ -89,12 +90,13 @@ async def handle_peer(
                 )
             ), connected_applications)
 
+
     except asyncio.IncompleteReadError as err:
-        logger.error(f"[CONN] {peer} disconnected unexpectedly: {err}")
+        logger.error(f"[CONNECTION] {peer} disconnected unexpectedly: {err}")
     except Exception as err:
-        logger.exception(f"[CONN] Unexpected error from {peer}: {err}")
+        logger.exception(f"[CONNECTION] Unexpected error from {peer}: {err}")
     finally:
         connected_applications.discard(writer)
         writer.close()
         await writer.wait_closed()
-        logger.info(f"[CONN] Connection closed {peer}")
+        logger.info(f"[CONNECTION] Connection closed {peer}")
