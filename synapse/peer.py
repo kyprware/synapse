@@ -95,8 +95,3 @@ async def handle_peer(
         logger.error(f"[CONNECTION] {peer} disconnected unexpectedly: {err}")
     except Exception as err:
         logger.exception(f"[CONNECTION] Unexpected error from {peer}: {err}")
-    finally:
-        connected_applications.discard(writer)
-        writer.close()
-        await writer.wait_closed()
-        logger.info(f"[CONNECTION] Connection closed {peer}")
