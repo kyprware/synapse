@@ -5,9 +5,9 @@ JSON-RPC dispatch registry and execution logic.
 import logging
 import inspect
 from typing import (
+    cast,
     List,
     Union,
-    TypeVar,
     Optional,
     Callable,
     ParamSpec,
@@ -17,10 +17,9 @@ from typing import (
 from ..schemas.rpc_schema import RPCRequest, RPCResponse, RPCError
 
 
-R = TypeVar("R")
-P = ParamSpec("P")
-
-RPCDispatchMethod = Callable[..., Union[R, Awaitable[R]]]
+RPCHandlerReturn = Union[RPCResponse, Awaitable[RPCResponse]]
+RPCHandler = Callable[ParamSpec("P"), RPCHandlerReturn]
+RPCDispatchMethod = Callable[..., RPCHandlerReturn]
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -41,7 +40,7 @@ class DispatchManager:
     def register(
         self,
         name: str
-    ) -> Callable[[Callable[P, R]], Callable[P, R]]:
+    ) -> Callable[[RPCHandler], RPCHandler]:
         """
         Decorator to register an RPC handler function by name.
 
@@ -52,7 +51,7 @@ class DispatchManager:
             Callable: A decorator that registers the function.
         """
 
-        def wrapper(func: Callable[P, R]) -> Callable[P, R]:
+        def wrapper(func: RPCHandler) -> RPCHandler:
             self._registry[name] = func
             logger.debug(f"[DISPATCH] Registered RPC method: {name}")
             return func
@@ -111,16 +110,13 @@ async def dispatch_rpcs(
         try:
             params: dict = request.params or {}
 
-            if inspect.iscoroutinefunction(handler):
-                result = await handler(**params)
-            else:
-                result = handler(**params)
-
-            responses.append(RPCResponse(
-                jsonrpc=request.jsonrpc,
-                id=request.id,
-                result=result
-            ))
+            responses.append(
+                cast(RPCResponse, (
+                    await handler(**params)
+                    if inspect.iscoroutinefunction(handler) else
+                    handler(**params)
+                ))
+            )
 
         except TypeError as err:
             responses.append(RPCResponse(
