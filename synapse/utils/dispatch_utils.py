@@ -108,13 +108,13 @@ async def dispatch_rpcs(
             continue
 
         try:
-            params: dict = request.params or {}
+            params: dict = { "id": request.id, **(request.params or {}) }
 
             responses.append(
                 cast(RPCResponse, (
-                    await handler(**params)
+                    await handler(request.id, **params)
                     if inspect.iscoroutinefunction(handler) else
-                    handler(**params)
+                    handler(request.id, **params)
                 ))
             )
 
