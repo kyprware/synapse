@@ -7,7 +7,7 @@ import inspect
 from typing import (
     cast,
     List,
-    Union,
+    TypeVar,
     Optional,
     Callable,
     ParamSpec,
@@ -16,10 +16,11 @@ from typing import (
 
 from ..schemas.rpc_schema import RPCRequest, RPCResponse, RPCError
 
+P = ParamSpec("P")
+R = TypeVar("R", bound=RPCResponse)
 
-RPCHandlerReturn = Union[RPCResponse, Awaitable[RPCResponse]]
-RPCHandler = Callable[ParamSpec("P"), RPCHandlerReturn]
-RPCDispatchMethod = Callable[..., RPCHandlerReturn]
+RPCHandler = Callable[P, Awaitable[R]]
+RPCDispatchMethod = Callable[..., Awaitable[RPCResponse]]
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -111,11 +112,7 @@ async def dispatch_rpcs(
             params: dict = { "id": request.id, **(request.params or {}) }
 
             responses.append(
-                cast(RPCResponse, (
-                    await handler(request.id, **params)
-                    if inspect.iscoroutinefunction(handler) else
-                    handler(request.id, **params)
-                ))
+                await handler(request.id, **params)
             )
 
         except TypeError as err:
