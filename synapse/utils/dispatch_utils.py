@@ -3,9 +3,7 @@ JSON-RPC dispatch registry and execution logic.
 """
 
 import logging
-import inspect
 from typing import (
-    cast,
     List,
     TypeVar,
     Optional,
