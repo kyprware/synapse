@@ -3,6 +3,7 @@ JSON-RPC dispatch registry and execution logic.
 """
 
 import logging
+import importlib
 
 from typing import (
     List,
@@ -35,12 +36,17 @@ class DispatchManager:
     Manages the registration and retrieval of RPC handler functions.
     """
 
-    def __init__(self):
+    def __init__(self, handler_modules: Optional[List[str]] = None):
         """
         Initialize the DispatchManager with an empty registry.
+
+        Args:
+            handler_modules: List of module paths to load handlers from
         """
 
         self._registry: dict[str, RPCDispatchMethod] = {}
+        self._handler_modules = handler_modules or []
+        self._loaded = False
 
 
     def register(
@@ -72,11 +78,32 @@ class DispatchManager:
         Args:
             name (str): The name of the RPC method.
 
-        Returns:
-            Optional[Callable]: The handler function or None if not found.
+        Returns: Optional[Callable]: The handler function or None if not found.
         """
 
+        if not self._loaded:
+            self._load_handlers()
+
         return self._registry.get(name)
+
+
+    def _load_handlers(self):
+        """Load all configured handler modules."""
+
+        if self._loaded:
+            return
+
+        for module_path in self._handler_modules:
+            try:
+                importlib.import_module(module_path)
+                logger.debug(f"[DISPATCH] Loaded handler: {module_path}")
+            except ImportError as e:
+                logger.error(
+                    f"[DISPATCH] Failed to load handler {module_path}: {e}"
+                )
+
+        self._loaded = True
+        logger.info(f"[DISPATCH] Loaded {len(self._registry)} RPC handlers")
 
 
 async def dispatch_rpcs(
