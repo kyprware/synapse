@@ -1,6 +1,5 @@
 """
-PostgreSQL database connection configuration. Loads connection parameters from
-environment variables and creates an SQLAlchemy engine and session factory.
+PostgreSQL database connection configuration using a DATABASE_URL.
 """
 
 import os
@@ -10,20 +9,16 @@ from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import sessionmaker, Session
 
+
 load_dotenv()
 
-DB_USER: Final[str] = os.getenv("POSTGRES_USER", "")
-DB_PASSWORD: Final[str] = os.getenv("POSTGRES_PASSWORD", "")
-DB_HOST: Final[str] = os.getenv("POSTGRES_HOST", "localhost")
-DB_PORT: Final[str] = os.getenv("POSTGRES_PORT", "5432")
-DB_NAME: Final[str] = os.getenv("POSTGRES_DB", "")
-
-if not all([DB_USER, DB_PASSWORD, DB_NAME]):
-    raise ValueError("Missing required PostgreSQL environment variables.")
-
-DATABASE_URL: Final[str] = (
-    f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+DATABASE_URL: Final[str] = os.getenv(
+    "DATABASE_URL",
+    "postgresql://user:password@localhost:5432/dbname"
 )
+
+if not DATABASE_URL:
+    raise ValueError("DATABASE_URL environment variable is required.")
 
 engine: Final[Engine] = create_engine(DATABASE_URL, echo=False, future=True)
 
