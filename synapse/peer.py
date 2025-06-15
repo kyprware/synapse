@@ -23,7 +23,7 @@ from .schemas.rpc_schema import (
 
 
 logger: logging.Logger = logging.getLogger(__name__)
-connected_applications: set[asyncio.StreamWriter] = set()
+registered_applications: set[asyncio.StreamWriter] = set()
 
 
 async def handle_peer(
@@ -44,17 +44,17 @@ async def handle_peer(
 
     peer: Optional[Tuple[str, int]] = writer.get_extra_info("peername")
     logger.info(f"[CONNECTION] Connection from {peer}")
-    connected_applications.add(writer)
+    registered_applications.add(writer)
 
     try:
         payload: Optional[RPCPayload] = await decode_payload(reader)
 
-        if not payload or writer not in connected_applications:
+        if not payload or writer not in registered_applications:
             return None
 
         if isinstance(payload, RPCNotification):
             # emit notification based on priviledge
-            await emit_message(payload, connected_applications)
+            await emit_message(payload, registered_applications)
             return None
 
         batch_payload: RPCBatchData = cast(RPCBatchData,
@@ -65,12 +65,12 @@ async def handle_peer(
             # emit response based on priviledge
             await emit_message((
                 batch_payload if len(batch_payload) > 1 else batch_payload[0]
-            ), connected_applications)
+            ), registered_applications)
         elif all(isinstance(p, RPCRequest) for p in batch_payload):
             # emit request based on priviledge
             await emit_message((
                 batch_payload if len(batch_payload) > 1 else batch_payload[0]
-            ), connected_applications)
+            ), registered_applications)
 
             response: List[RPCResponse] = await dispatch_rpcs(
                 dispatcher,
@@ -80,7 +80,7 @@ async def handle_peer(
             # broadcast response based on priviledge
             await emit_message(cast(RPCPayload,
                 response if len(response) > 1 else response[0]
-            ), connected_applications)
+            ), registered_applications)
         else:
             await emit_message(RPCResponse(
                 id=None,
@@ -88,7 +88,7 @@ async def handle_peer(
                     code=-32603,
                     message=f"Invalid Request(s): {batch_payload}"
                 )
-            ), connected_applications)
+            ), registered_applications)
 
     except asyncio.IncompleteReadError as err:
         logger.error(f"[CONNECTION] {peer} disconnected unexpectedly: {err}")
