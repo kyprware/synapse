@@ -51,6 +51,7 @@ async def main() -> None:
     context: ssl.SSLContext = ssl.create_default_context(
         ssl.Purpose.CLIENT_AUTH
     )
+
     context.load_cert_chain(certfile=CERT_FILE, keyfile=KEY_FILE)
 
     server: asyncio.AbstractServer = await asyncio.start_server(
