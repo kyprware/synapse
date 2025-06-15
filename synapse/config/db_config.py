@@ -1,6 +1,6 @@
 """
 PostgreSQL database connection configuration. Loads connection parameters from
-environment variables and creates an SQLAlchemy engine.
+environment variables and creates an SQLAlchemy engine and session factory.
 """
 
 import os
@@ -8,7 +8,7 @@ from typing import Final
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
-
+from sqlalchemy.orm import sessionmaker, Session
 
 load_dotenv()
 
@@ -26,3 +26,9 @@ DATABASE_URL: Final[str] = (
 )
 
 engine: Final[Engine] = create_engine(DATABASE_URL, echo=False, future=True)
+
+SessionLocal: sessionmaker[Session] = sessionmaker(
+    bind=engine,
+    autocommit=False,
+    autoflush=False
+)
