@@ -21,15 +21,11 @@ from ..schemas.rpc_schema import (
 )
 
 
-RPCHandler = Callable[
-    ParamSpec("P"),
-    Awaitable[TypeVar("R", bound=RPCResponse)]
-]
+P = ParamSpec("P")
+R = TypeVar("R", bound=RPCResponse)
 
-RPCDispatchMethod = Callable[
-    ...,
-    Awaitable[RPCResponseData]
-]
+RPCHandler = Callable[P, Awaitable[R]]
+RPCDispatchMethod = Callable[..., Awaitable[RPCResponseData]]
 
 logger: logging.Logger = logging.getLogger(__name__)
 
