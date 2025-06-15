@@ -8,6 +8,7 @@ import json
 import struct
 import asyncio
 import logging
+
 from typing import Optional, Union, Any, Dict, cast
 
 from pydantic import BaseModel
@@ -53,10 +54,10 @@ def serialize_payload(obj: Union[BaseModel, list, dict]) -> Union[dict, list]:
     JSON-serializable format.
 
     Args:
-        obj: The Pydantic model, list, or dict to serialize.
+        obj (BaseModel | list | dict): The payload to serialize.
 
     Returns:
-        A dict, list, or primitive value that can be encoded to JSON.
+        dict | list: A dict or list that can be encoded to JSON.
     """
 
     if isinstance(obj, BaseModel):

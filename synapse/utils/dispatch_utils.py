@@ -3,6 +3,7 @@ JSON-RPC dispatch registry and execution logic.
 """
 
 import logging
+
 from typing import (
     List,
     TypeVar,
@@ -12,13 +13,23 @@ from typing import (
     Awaitable
 )
 
-from ..schemas.rpc_schema import RPCRequest, RPCResponse, RPCError
+from ..schemas.rpc_schema import (
+    RPCRequest,
+    RPCResponse,
+    RPCResponseData,
+    RPCError
+)
 
-P = ParamSpec("P")
-R = TypeVar("R", bound=RPCResponse)
 
-RPCHandler = Callable[P, Awaitable[R]]
-RPCDispatchMethod = Callable[..., Awaitable[RPCResponse]]
+RPCHandler = Callable[
+    ParamSpec("P"),
+    Awaitable[TypeVar("R", bound=RPCResponse)]
+]
+
+RPCDispatchMethod = Callable[
+    ...,
+    Awaitable[RPCResponseData]
+]
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -101,18 +112,17 @@ async def dispatch_rpcs(
                     message=f"Method '{request.method}' not found"
                 )
             ))
-
             logger.warning(f"[DISPATCH] Unknown method: {request.method}")
-
             continue
 
         try:
-            params: dict = { "id": request.id, **(request.params or {}) }
+            response = await handler(**request.params or {})
 
-            responses.append(
-                await handler(request.id, **params)
-            )
-
+            responses.append(RPCResponse(
+                id=request.id,
+                error=response.error,
+                result=response.result,
+            ))
         except TypeError as err:
             responses.append(RPCResponse(
                 jsonrpc=request.jsonrpc,
@@ -122,7 +132,6 @@ async def dispatch_rpcs(
                     message=f"Invalid params: {err}"
                 )
             ))
-
             logger.error(
                 f"[DISPATCH] Param error in '{request.method}': {err}"
             )
@@ -136,7 +145,6 @@ async def dispatch_rpcs(
                     message=f"Internal error: {err}"
                 )
             ))
-
             logger.exception(f"[DISPATCH] Exception in '{request.method}'")
 
     return responses
