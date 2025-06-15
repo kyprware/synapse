@@ -1,20 +1,56 @@
 services:
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: synapse
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256 --auth-local=scram-sha-256"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d synapse -h localhost"]
+      retries: 5
+      timeout: 5s
+      interval: 10s
+      start_period: 30s
+    restart: unless-stopped
+    networks:
+      - synapse_network
+
   server:
-    build: .
-    command: python -m synapse
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy
     volumes:
       - .:/app
+    environment:
+      DEBUG: "0"
+      LOG_LEVEL: "debug"
+      PORT: "8080"
+      HOST: "0.0.0.0"
+      TLS_KEY: "certs/key.pem"
+      TLS_CERT: "certs/cert.pem"
+      JWT_ALGORITHM: "HS256"
+      JWT_EXPIRE_SECONDS: "3600"
+      JWT_SECRET: "2w0Xeg0Ct0_MH7aMYaI8Y7scIN9q9axYq-nMC_8S1Ls="
+      FERNET_KEY: "2w0Xeg0Ct0_MH7aMYaI8Y7scIN9q9axYq-nMC_8S1Ls="
+      DATABASE_URL: "postgresql://user:password@db:5432/synapse"
     ports:
       - "8080:8080"
-    env_file:
-      - .env
+    restart: unless-stopped
+    networks:
+      - synapse_network
 
-  test:
-    build: .
-    command: pytest
-    volumes:
-      - .:/app
-    depends_on:
-      - server
-    env_file:
-      - .env
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  synapse_network:
+    driver: bridge
