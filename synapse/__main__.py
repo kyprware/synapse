@@ -11,6 +11,7 @@ from os import getenv
 from dotenv import load_dotenv
 
 from .peer import handle_peer
+from .config.db_init import initialize_database
 
 
 load_dotenv()
@@ -18,8 +19,8 @@ load_dotenv()
 HOST: str = getenv("HOST", "localhost")
 PORT: int = int(getenv("PORT", "8080"))
 
-KEY_FILE: str = getenv("TLS_KEY", "key.pem")
-CERT_FILE: str = getenv("TLS_CERT", "cert.pem")
+KEY_FILE: str = getenv("TLS_KEY", "certs/key.pem")
+CERT_FILE: str = getenv("TLS_CERT", "certs/cert.pem")
 
 DEBUG: bool = bool(getenv("DEBUG", True))
 LOG_LEVEL: str = getenv("LOG_LEVEL", ("DEBUG" if DEBUG else "INFO")).upper()
@@ -44,6 +45,8 @@ async def main() -> None:
     connections using the `handle_peer` function, and uses SSL certificates
     for secure communication.
     """
+
+    initialize_database()
 
     context: ssl.SSLContext = ssl.create_default_context(
         ssl.Purpose.CLIENT_AUTH
