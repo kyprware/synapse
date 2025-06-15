@@ -2,11 +2,11 @@
 Schemas for JSON-RPC 2.0 requests and responses.
 """
 
-from pydantic import BaseModel, field_validator
-
 from typing import Optional, Union, Any
 
-from .shared.validators import (
+from pydantic import BaseModel, field_validator
+
+from ..utils.validator_utils import (
     validate_uuid,
     validate_jsonrpc_version,
     validate_jsonrpc_error_codes
@@ -32,13 +32,13 @@ class RPCRequest(BaseModel):
     @field_validator("jsonrpc")
     @classmethod
     def validate_jsonrpc(cls, v: str) -> str:
-        return validate_jsonrpc_version(cls, v)
+        return validate_jsonrpc_version("jsonrpc", v)
 
 
     @field_validator("id")
     @classmethod
     def validate_id(cls, v: Union[str, None]) -> Union[str, None]:
-        return validate_uuid(cls, v) if v else None
+        return validate_uuid("id", v) if v else None
 
 
 class RPCError(BaseModel):
@@ -58,10 +58,23 @@ class RPCError(BaseModel):
     @field_validator("code")
     @classmethod
     def validate_code(cls, v: int) -> int:
-        return validate_jsonrpc_error_codes(cls, v)
+        return validate_jsonrpc_error_codes("code", v)
 
 
-class RPCResponse(BaseModel):
+class RPCResponseData(BaseModel):
+    """
+    JSON-RPC 2.0 response data schema.
+
+    Fields:
+        result (Any | None): Result returned by the method, if successful.
+        error (RPCError | None): Error object, if an error occurred.
+    """
+
+    result: Optional[Any] = None
+    error: Optional[RPCError] = None
+
+
+class RPCResponse(RPCResponseData):
     """
     JSON-RPC 2.0 response schema.
 
@@ -74,19 +87,17 @@ class RPCResponse(BaseModel):
 
     jsonrpc: str = "2.0"
     id: Union[str, None]
-    result: Optional[Any] = None
-    error: Optional[RPCError] = None
 
     @field_validator("jsonrpc")
     @classmethod
     def validate_jsonrpc(cls, v: str) -> str:
-        return validate_jsonrpc_version(cls, v)
+        return validate_jsonrpc_version("jsonrpc", v)
 
 
     @field_validator("id")
     @classmethod
     def validate_id(cls, v: Union[str, None]) -> Union[str, None]:
-        return validate_uuid(cls, v) if v else None
+        return validate_uuid("id", v) if v else None
 
 
 class RPCNotification(BaseModel):
@@ -106,4 +117,4 @@ class RPCNotification(BaseModel):
     @field_validator("jsonrpc")
     @classmethod
     def validate_jsonrpc(cls, v: str) -> str:
-        return validate_jsonrpc_version(cls, v)
+        return validate_jsonrpc_version("jsonrpc", v)
