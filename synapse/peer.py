@@ -9,11 +9,11 @@ import asyncio
 import logging
 from typing import Optional, Tuple, List, cast
 
-from .types.rpc_types import RPCBatchData, RPCPayload
 from .utils.emit_utils import emit_message
+from .config.dispatch_config import dispatcher
 from .utils.payload_utils import decode_payload
 from .utils.dispatch_utils import dispatch_rpcs
-from .handlers.application_handlers import dispatcher
+from .types.rpc_types import RPCBatchData, RPCPayload
 from .schemas.rpc_schema import (
     RPCNotification,
     RPCResponse,
@@ -49,7 +49,7 @@ async def handle_peer(
     try:
         payload: Optional[RPCPayload] = await decode_payload(reader)
 
-        if not payload:
+        if not payload or writer not in connected_applications:
             return None
 
         if isinstance(payload, RPCNotification):
@@ -89,7 +89,6 @@ async def handle_peer(
                     message=f"Invalid Request(s): {batch_payload}"
                 )
             ), connected_applications)
-
 
     except asyncio.IncompleteReadError as err:
         logger.error(f"[CONNECTION] {peer} disconnected unexpectedly: {err}")
