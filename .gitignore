@@ -3,6 +3,11 @@ certs/
 *.pem
 *.cert
 
+# docs
+docs/.vitepress/cache
+node_modules/
+bun.lock
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
