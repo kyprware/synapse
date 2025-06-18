@@ -29,13 +29,15 @@ jobs:
       - name: Setup GitHub Pages
         uses: actions/configure-pages@v4
 
-      - name: Install dependencies
+      - name: Install dependencies with Bun
         run: bun install
+        working-directory: docs
 
       - name: Build VitePress site
         run: bun run docs:build
+        working-directory: docs
 
-      - name: Upload artifact
+      - name: Upload build artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: docs/.vitepress/dist
