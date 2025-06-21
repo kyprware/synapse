@@ -16,7 +16,7 @@ const contributors = [
     {
         avatar: "https://github.com/airrstorm.png",
         name: "Earl Asamoah",
-        title: "Core Contributor",
+        title: "Batman",
         links: [
             { icon: "github", link: "https://github.com/airrstorm" }
         ]
