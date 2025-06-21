@@ -20,22 +20,22 @@ control applications of your choice. Since LLMs often need to interact with
 external data and tools, SYNAPSE provides the necessary integration layer to
 support that seamlessly, synapse provides:
 
-- 🔄 LLM-Agnostic: Easily switch between any large language model or vendor
-    with ease.
-- ⚡ Build on the NERVE-work: Quickly create applications and agents in any
-    language.
-- 🔐 Security First: Scoped permissions, secure channels,
+- 🔄 **LLM-Agnostic**: Easily switch between any large language model or vendor
+with ease.
+- ⚡ **Build on the NERVE-work**: Quickly create applications and agents in any
+language.
+- 🔐 **Security First**: Scoped permissions, secure channels,
     and infrastructure-aware design to keep your data safe.
-- 🌍 Scalable & Lightweight: Deploy anywhere from a single container to a
-    global network of services. One node, infinite reach.
-- 🔌 Multi-LLM & Multi-Hub Coordination: Seamlessly connect and orchestrate
-    multiple LLMs or even other Synapse hubs in a unified workflow.
-- 🚀 Workflow-Ready by Default: Define, propagate, and execute structured
-    actions across your agents with minimal configuration.
-- 🧰 Pre-Built Integrations: A growing library of plug-and-play connectors for
-    tools, APIs, databases, and services.
-- ❤️ Open Source & Developer-Friendly: Built in the open for builders—extend
-    it, self-host it, or contribute to shape its future.
+- 🌍 **Scalable & Lightweight**: Deploy anywhere from a single container to a
+global network of services. One node, infinite reach.
+- 🔌 **Multi-LLM & Multi-Hub Coordination**: Seamlessly connect and orchestrate
+multiple LLMs or even other Synapse hubs in a unified workflow.
+- 🚀 **Workflow-Ready by Default**: Define, propagate, and execute structured
+actions across your agents with minimal configuration.
+- 🧰 **Pre-Built Integrations**: A growing library of plug-and-play connectors for
+tools, APIs, databases, and services.
+- ❤️ **Open Source & Developer-Friendly**: Built in the open for
+builders-extend it, self-host it, or contribute to shape its future.
 
 # General Architecture
 
@@ -68,28 +68,6 @@ graph TD
     SynA <--> SynB
 ```
 
-# Quickstart
-
-<FeaturesGrid>
-    <Feature
-        title="Building an Application"
-        details="Use Synapse as the backbone for LLM-powered apps that connect
-        tools, services, and agents with ease."
-        link="/guide/quickstart"
-    />
-</FeaturesGrid>
-
-# Examples
-
-<FeaturesGrid>
-    <Feature
-        title="Example Application"
-        details="See how Synapse coordinates LLMs and services in real-world
-        scenarios, from automation to decision-making."
-        link="/guide/examples"
-    />
-</FeaturesGrid>
-
 # Explore
 
 <FeaturesGrid>
@@ -100,22 +78,10 @@ graph TD
         link="/guide/architecture"
     />
     <Feature
-        title="Resources"
-        details="Learn about available Libraries, APIs, starter templates, and
-        guides to help you build with Synapse."
-        link="/guide/resources"
-    />
-    <Feature
         title="Permissions"
         details="Define fine-grained control over who can trigger what,
         ensuring safe and auditable interactions."
         link="/guide/permissions"
-    />
-    <Feature
-        title="Transport"
-        details="Flexible transport layer allows Synapse to propagate actions
-        via"
-        link="/guide/transport"
     />
 </FeaturesGrid>
 

@@ -54,7 +54,6 @@ export default withMermaid(
                         collapsed: false,
                         items: [
                             { text: "Introduction", link: "/guide/introduction" },
-                            { text: "Quick Start", link: "/guide/quickstart" }
                         ]
                     },
                     {
@@ -62,18 +61,9 @@ export default withMermaid(
                         collapsed: false,
                         items: [
                             { text: "Architecture", link: "/guide/architecture" },
-                            { text: "Transport", link: "/guide/transport" },
                             { text: "Permissions", link: "/guide/permissions" }
                         ]
                     },
-                    {
-                        text: "Reference",
-                        collapsed: false,
-                        items: [
-                            { text: "Resources", link: "/guide/resources" },
-                            { text: "Examples", link: "/guide/examples" }
-                        ]
-                    }
                 ],
                 "/development/": [
                     {

@@ -1,4 +1,5 @@
 # Contributors
+> Developers behind SYNAPSE and The NERVE Project
 
 <script setup>
 import { VPTeamMembers } from "vitepress/theme"
