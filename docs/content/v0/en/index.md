@@ -7,17 +7,9 @@ hero:
   tagline: "The NERVE-work communication hub"
   actions:
     - theme: brand
-      text: What is Synapse?
-      link: /
+      text: Get Started
+      link: /guide/introduction
     - theme: alt
-      text: Guide
-      link: /
-
-features:
-  - title: Feature A
-    details: Lorem ipsum dolor sit amet, consectetur adipiscing elit
-  - title: Feature B
-    details: Lorem ipsum dolor sit amet, consectetur adipiscing elit
-  - title: Feature C
-    details: Lorem ipsum dolor sit amet, consectetur adipiscing elit
+      text: Github
+      link: https://github.com/kyprware/synapse
 ---
