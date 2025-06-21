@@ -1,10 +1,9 @@
 <template>
     <component
         :is="link ? 'a' : 'div'"
-        :href="link"
+        :href="link ? `/synapse${link}` : undefined"
         class="feature"
-        target="_blank"
-        rel="noopener noreferrer"
+        rel="noopener"
     >
     <h3 class="feature-title">{{ title }}</h3>
     <p class="feature-details">{{ details }}</p>
