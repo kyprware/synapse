@@ -36,8 +36,56 @@ export default withMermaid(
             search: {
                 provider: "local",
             },
-            nav: [],
-            sidebar: [],
+            nav: [
+                { text: "Home", link: "/" },
+                { text: "Guide", link: "/guide/introduction" },
+                {
+                    text: "Development",
+                    items: [
+                        { text: "Contributing", link: "/development/contributing" },
+                        { text: "Contributors", link: "/development/contributors" }
+                    ]
+                }
+            ],
+            sidebar: {
+                "/guide/": [
+                    {
+                        text: "Getting Started",
+                        collapsed: false,
+                        items: [
+                            { text: "Introduction", link: "/guide/introduction" },
+                            { text: "Quick Start", link: "/guide/quickstart" }
+                        ]
+                    },
+                    {
+                        text: "Core Concepts",
+                        collapsed: false,
+                        items: [
+                            { text: "Architecture", link: "/guide/architecture" },
+                            { text: "Transport", link: "/guide/transport" },
+                            { text: "Permissions", link: "/guide/permissions" }
+                        ]
+                    },
+                    {
+                        text: "Reference",
+                        collapsed: false,
+                        items: [
+                            { text: "Resources", link: "/guide/resources" },
+                            { text: "Examples", link: "/guide/examples" }
+                        ]
+                    }
+                ],
+                "/development/": [
+                    {
+                        text: "Development",
+                        collapsed: false,
+                        items: [
+                            { text: "Contributing", link: "/development/contributing" },
+                            { text: "Contributors", link: "/development/contributors" }
+                        ]
+                    }
+                ]
+            },
             socialLinks: [
                 { icon: "github", link: "https://github.com/kyprware/synapse/" },
             ],
