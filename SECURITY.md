@@ -45,7 +45,5 @@ information to help us reproduce or better understand the issue.
 
 ---
 
-## 🙏 Thanks
-
-We deeply appreciate your efforts to make SYNAPSE and the NERVE-work more
+> We deeply appreciate your efforts to make SYNAPSE and the NERVE-work more
 secure for everyone.
