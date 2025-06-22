@@ -3,7 +3,7 @@ Initialize database and create all needed tables
 """
 
 from .db_config import engine
-from ..models.application_model import Base
+from ..models.base_model import Base
 
 def initialize_database():
     """

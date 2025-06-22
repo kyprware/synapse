@@ -7,7 +7,7 @@ from sqlalchemy.exc import IntegrityError
 
 from ..types.rpc_types import RPCAction
 from .application_services import get_application_by_id
-from ..models.application_model import ApplicationPermission
+from ..models.application_permission_model import ApplicationPermission
 
 
 logger = logging.getLogger(__name__)
