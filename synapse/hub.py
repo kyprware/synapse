@@ -26,7 +26,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 registered_applications: set[asyncio.StreamWriter] = set()
 
 
-async def handle_peer(
+async def handle_spokes(
     reader: asyncio.StreamReader,
     writer: asyncio.StreamWriter
 ) -> None:
@@ -42,8 +42,8 @@ async def handle_peer(
         writer (asyncio.StreamWriter): The stream writer for the connection.
     """
 
-    peer: Optional[Tuple[str, int]] = writer.get_extra_info("peername")
-    logger.info(f"[CONNECTION] Connection from {peer}")
+    spoke: Optional[Tuple[str, int]] = writer.get_extra_info("peername")
+    logger.info(f"[CONNECTION] Connection from {spoke}")
     registered_applications.add(writer)
 
     try:
@@ -91,6 +91,6 @@ async def handle_peer(
             ), registered_applications)
 
     except asyncio.IncompleteReadError as err:
-        logger.error(f"[CONNECTION] {peer} disconnected unexpectedly: {err}")
+        logger.error(f"[CONNECTION] {spoke} disconnected unexpectedly: {err}")
     except Exception as err:
-        logger.exception(f"[CONNECTION] Unexpected error from {peer}: {err}")
+        logger.exception(f"[CONNECTION] Unexpected error from {spoke}: {err}")

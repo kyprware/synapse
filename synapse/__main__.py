@@ -10,7 +10,7 @@ from os import getenv
 
 from dotenv import load_dotenv
 
-from .peer import handle_peer
+from .hub import handle_spokes
 from .config.db_init import initialize_database
 
 
@@ -42,7 +42,7 @@ async def main() -> None:
     Starts the asynchronous SSL-enabled JSON-RPC server.
 
     The server listens on the configured host and port, handles incoming
-    connections using the `handle_peer` function, and uses SSL certificates
+    connections using the `handle_spokes` function, and uses SSL certificates
     for secure communication.
     """
 
@@ -55,7 +55,7 @@ async def main() -> None:
     context.load_cert_chain(certfile=CERT_FILE, keyfile=KEY_FILE)
 
     server: asyncio.AbstractServer = await asyncio.start_server(
-        client_connected_cb=handle_peer,
+        client_connected_cb=handle_spokes,
         ssl=context,
         host=HOST,
         port=PORT
