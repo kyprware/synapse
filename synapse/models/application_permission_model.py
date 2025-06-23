@@ -1,4 +1,3 @@
-import uuid
 import logging
 
 from typing import Final, TYPE_CHECKING
@@ -6,6 +5,7 @@ from typing import Final, TYPE_CHECKING
 from sqlalchemy import (
     Index,
     String,
+    Integer,
     Boolean,
     ForeignKey,
     Enum as PgEnum,
@@ -49,10 +49,10 @@ class ApplicationPermission(Base):
         Index("idx_active_owner_action", "is_active", "owner_id", "action")
     )
 
-    id: Mapped[str] = mapped_column(
-        String,
+    id: Mapped[int] = mapped_column(
+        Integer,
         primary_key=True,
-        default=lambda: str(uuid.uuid4())
+        autoincrement=True
     )
     owner_id: Mapped[str] = mapped_column(
         String,
@@ -126,7 +126,7 @@ class ApplicationPermission(Base):
         """
 
         return {
-            "id": str(self.id),
+            "id": self.id,
             "action":  self.action.value,
             "owner_id": self.owner_id,
             "target_id": self.target_id,
