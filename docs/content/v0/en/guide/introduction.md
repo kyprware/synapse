@@ -3,7 +3,7 @@
 > Getting started with SYNAPSE, building a NERVE-work
 
 Synapse 
-Structured Yielding Network Anchor for Propagation and Spoke Execution) is a
+(Structured Yielding Network Anchor for Propagation and Spoke Execution) is a
 relay hub that connects spokes, providing shared context across applications
 such as LLMs—and enabling coordinated action execution.
 
