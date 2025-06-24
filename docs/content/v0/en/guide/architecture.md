@@ -26,7 +26,7 @@ flowchart TD
 
 ### What Does This Mean?
 
-With this network architecture, components of new applications can be designed to act as mediators between existing servers and services and the NERVE-work
+With this network architecture, components of new applications can be designed to act as mediators between existing servers and services and the NERVE-work.
 For example, an application can be made or a music streaming service allowing
 other applications like the LLM and the user to control the users instance of
 the music service.
