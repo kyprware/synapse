@@ -9,11 +9,16 @@ import asyncio
 import logging
 from typing import Optional, Tuple, List, cast
 
+
 from .utils.emit_utils import emit_message
+from .config.db_config import SessionLocal
 from .config.dispatch_config import dispatcher
 from .utils.payload_utils import decode_payload
 from .utils.dispatch_utils import dispatch_rpcs
-from .types.rpc_types import RPCBatchData, RPCPayload
+from .types.rpc_types import RPCAction, RPCBatchData, RPCPayload
+from .utils.connection_utils import ConnectedApplicationRegistry
+from .schemas.application_connection_shema import ConnectedApplication
+from .services.permission_services import find_authorized_applications
 from .schemas.rpc_schema import (
     RPCNotification,
     RPCResponse,
@@ -23,7 +28,11 @@ from .schemas.rpc_schema import (
 
 
 logger: logging.Logger = logging.getLogger(__name__)
-registered_applications: set[asyncio.StreamWriter] = set()
+connected_applications: ConnectedApplication = ConnectedApplicationRegistry()
+
+
+def get_authorized_writers() -> set[asyncio.StreamWriter]:
+    return
 
 
 async def handle_spokes(
@@ -44,51 +53,68 @@ async def handle_spokes(
 
     spoke: Optional[Tuple[str, int]] = writer.get_extra_info("peername")
     logger.info(f"[CONNECTION] Connection from {spoke}")
-    registered_applications.add(writer)
 
     try:
-        payload: Optional[RPCPayload] = await decode_payload(reader)
+        initial_payload: Optional[RPCPayload] = await decode_payload(reader)
 
-        if not payload or writer not in registered_applications:
+        if not initial_payload:
             return None
 
-        if isinstance(payload, RPCNotification):
-            # emit notification based on priviledge
-            await emit_message(payload, registered_applications)
-            return None
-
-        batch_payload: RPCBatchData = cast(RPCBatchData,
-            [payload] if not isinstance(payload, list) else payload
-        )
-
-        if all(isinstance(p, RPCResponse) for p in batch_payload):
-            # emit response based on priviledge
-            await emit_message((
-                batch_payload if len(batch_payload) > 1 else batch_payload[0]
-            ), registered_applications)
-        elif all(isinstance(p, RPCRequest) for p in batch_payload):
-            # emit request based on priviledge
-            await emit_message((
-                batch_payload if len(batch_payload) > 1 else batch_payload[0]
-            ), registered_applications)
+        if isinstance(initial_payload, RPCRequest):
+            await emit_message(initial_payload, get_authorized_writers())
 
             response: List[RPCResponse] = await dispatch_rpcs(
                 dispatcher,
-                *cast(List[RPCRequest], batch_payload)
+                cast(RPCRequest, initial_payload)
             )
 
-            # broadcast response based on priviledge
-            await emit_message(cast(RPCPayload,
-                response if len(response) > 1 else response[0]
-            ), registered_applications)
+            await emit_message(
+                cast(RPCPayload, response),
+                get_authorized_writers()
+            )
         else:
-            await emit_message(RPCResponse(
-                id=None,
-                error=RPCError(
-                    code=-32603,
-                    message=f"Invalid Request(s): {batch_payload}"
+            logger.info("")
+
+        while True:
+            payload: Optional[RPCPayload] = await decode_payload(reader)
+
+            if not payload:
+                continue
+
+            if isinstance(payload, RPCNotification):
+                await emit_message(payload, get_authorized_writers())
+            else:
+                batch_payload: RPCBatchData = cast(RPCBatchData,
+                    [payload] if not isinstance(payload, list) else payload
                 )
-            ), registered_applications)
+
+                if all(isinstance(p, RPCResponse) for p in batch_payload):
+                    await emit_message((
+                        batch_payload
+                        if len(batch_payload) > 1 else batch_payload[0]
+                    ), get_authorized_writers())
+                elif all(isinstance(p, RPCRequest) for p in batch_payload):
+                    await emit_message((
+                            batch_payload
+                            if len(batch_payload) > 1 else batch_payload[0]
+                        ), get_authorized_writers())
+
+                    response: List[RPCResponse] = await dispatch_rpcs(
+                        dispatcher,
+                        *cast(List[RPCRequest], batch_payload)
+                    )
+
+                    await emit_message(cast(RPCPayload,
+                        response if len(response) > 1 else response[0]
+                    ), get_authorized_writers())
+                else:
+                    await emit_message(RPCResponse(
+                        id=None,
+                        error=RPCError(
+                            code=-32603,
+                            message=f"Invalid Request(s): {batch_payload}"
+                        )
+                    ), get_authorized_writers())
 
     except asyncio.IncompleteReadError as err:
         logger.error(f"[CONNECTION] {spoke} disconnected unexpectedly: {err}")

@@ -133,6 +133,7 @@ class Application(Base):
             return True
         except Exception as err:
             logger.debug(f"[Model] Failed to assert token encrypted: {err}")
+            raise ValueError(f"Failed to assert if token is encrypted: {err}")
 
         return False
 
@@ -171,7 +172,7 @@ class Application(Base):
             "name": self.name,
             "description": self.description,
             "server_url": self.server_url,
-            "is_admin": self.is_active,
+            "is_admin": self.is_admin,
             "is_active": self.is_active,
         }
 
@@ -191,7 +192,7 @@ class Application(Base):
 
         allowed_fields = {
             "name",
-            "description"
+            "description",
             "server_url",
             "auth_token",
             "is_admin",

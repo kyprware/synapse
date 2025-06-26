@@ -1,8 +1,7 @@
 # Core Arcitecture
 > Under the hood of SYNAPSE and the NERVE-work
 
-The (Structured Yielding Network Anchor for Propagation and Spoke Execution)
-SNAPSE is built on a modular hub-spoke network system which uses
+SYNAPSE (Structured Yielding Network Anchor for Propagation and Spoke Execution) is built on a modular hub-spoke network system which uses
 **Graph-Based Access Control (GBAC)**, which models permissions as directed
 edges between application nodes, enabling fine-grained control over who can
 send, receive, or view specific messages.
@@ -27,8 +26,7 @@ flowchart TD
 
 ### What Does This Mean?
 
-With this network architecture Components, new applications can be built to work as a 
-mediator between existing servers and services and the NERVE-work.
+With this network architecture, components of new applications can be designed to act as mediators between existing servers and services and the NERVE-work.
 For example, an application can be made or a music streaming service allowing
 other applications like the LLM and the user to control the users instance of
 the music service.
