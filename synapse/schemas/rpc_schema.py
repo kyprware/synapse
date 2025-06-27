@@ -7,7 +7,6 @@ from typing import Optional, Union, Any
 from pydantic import BaseModel, field_validator
 
 from ..utils.validator_utils import (
-    validate_uuid,
     validate_jsonrpc_version,
     validate_jsonrpc_error_codes
 )
@@ -45,11 +44,6 @@ class RPCRequest(RPCNotification):
     """
 
     id: Union[str, None]
-
-    @field_validator("id")
-    @classmethod
-    def validate_id(cls, v: Union[str, None]) -> Union[str, None]:
-        return validate_uuid("id", v) if v else None
 
 
 class RPCError(BaseModel):
@@ -103,9 +97,3 @@ class RPCResponse(RPCResponseData):
     @classmethod
     def validate_jsonrpc(cls, v: str) -> str:
         return validate_jsonrpc_version("jsonrpc", v)
-
-
-    @field_validator("id")
-    @classmethod
-    def validate_id(cls, v: Union[str, None]) -> Union[str, None]:
-        return validate_uuid("id", v) if v else None
