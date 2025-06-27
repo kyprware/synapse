@@ -87,22 +87,6 @@ class ApplicationPermission(Base):
     )
 
 
-    def __repr__(self) -> str:
-        """
-        Represent permissions as a string
-        """
-
-        return (
-            "<ApplicationPermission("
-            f"id='{self.id}', "
-            f"action='{self.action.value}', "
-            f"owner='{self.owner_id}', "
-            f"target='{self.target_id}', "
-            f"active={self.is_active}"
-            ")>"
-        )
-
-
     def to_dict(self) -> dict:
         """
         Convert permission to dictionary representation
@@ -118,3 +102,19 @@ class ApplicationPermission(Base):
             "target_id": self.target_id,
             "is_active": self.is_active
         }
+
+
+    def __repr__(self) -> str:
+        """
+        Represent permissions as a string
+        """
+
+        return (
+            "<ApplicationPermission("
+            f"id='{self.id}', "
+            f"action='{self.action.value}', "
+            f"owner='{self.owner_id}', "
+            f"target='{self.target_id}', "
+            f"active={self.is_active}"
+            ")>"
+        )
