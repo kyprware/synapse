@@ -4,7 +4,6 @@ JSON-RPC dispatch registry and execution logic.
 
 import logging
 import importlib
-
 from typing import (
     List,
     TypeVar,
