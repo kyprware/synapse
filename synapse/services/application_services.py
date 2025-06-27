@@ -142,7 +142,7 @@ def update_application(
 
     Args:
         db (Session): SQLAlchemy database session
-        app_id (str): The UUID of the application to update
+        app_id (str): The ID of the application to update
         updates (Dict[str, Any]): Dictionary of fields to update
 
     Returns:
@@ -151,7 +151,9 @@ def update_application(
     """
 
     if not updates:
-        logger.warning(f"[APPLICATION] No updates provided for application '{app_id}'")
+        logger.warning(
+            f"[APPLICATION] No updates provided for application '{app_id}'"
+        )
         return None
 
     try:
@@ -194,7 +196,7 @@ def delete_application(db: Session, app_id: str) -> bool:
 
     Args:
         db (Session): SQLAlchemy database session
-        app_id (str): The UUID of the application to delete
+        app_id (str): The ID of the application to delete
 
     Returns:
         bool: True if deletion was successful, False otherwise
