@@ -7,10 +7,9 @@ import logging
 from typing import Final, Optional, TYPE_CHECKING
 
 from sqlalchemy import Integer, String, Boolean, JSON
-from sqlalchemy.orm import Mapped, validates, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base_model import Base
-from ..utils.validator_utils import validate_url
 
 if TYPE_CHECKING:
     from .application_permission_model import ApplicationPermission
@@ -131,22 +130,6 @@ class Application(Base):
         except Exception as err:
             logger.error(f"Password verification failed for application {err}")
             return False
-
-
-    @validates("server_url")
-    def validate_url_field(self, key: str, value: str) -> str:
-        """
-        Validate application server URL field.
-
-        Args:
-            key (str): The field name being validated.
-            value (str): The URL value to validate.
-
-        Returns:
-            str: The validated URL value.
-        """
-
-        return validate_url(key, value)
 
 
     def to_dict(self) -> dict:
