@@ -2,7 +2,8 @@
 Schemas for application data types.
 """
 
-import asyncio
+from asyncio import StreamWriter
+
 from pydantic import BaseModel
 
 
@@ -12,11 +13,11 @@ class ApplicationConnection(BaseModel):
 
     Attributes:
         id (str): The unique identifier of the connected application.
-        writer (asyncio.StreamWriter): The stream writer used to communicate with the application.
+        writer (StreamWriter): The stream writer used to communicate with the application.
     """
 
     id: str
-    writer: asyncio.StreamWriter
+    writer: StreamWriter
 
 
     class Config:
