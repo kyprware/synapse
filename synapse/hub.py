@@ -9,6 +9,7 @@ import asyncio
 import logging
 from typing import Optional, Tuple, List, Set, cast
 
+
 from .utils.emit_utils import emit_message
 from .config.db_config import SessionLocal
 from .config.dispatch_config import dispatcher
@@ -117,7 +118,9 @@ async def handle_spokes(
             return None
 
 
-        connection: ApplicationConnection = find_connection_by_writer(writer)
+        connection: Optional[
+            ApplicationConnection
+        ] = find_connection_by_writer(writer)
 
         if not connection:
             logger.warning(
@@ -154,11 +157,11 @@ async def handle_spokes(
                 for payload in batch_payload:
                     response: RPCResponse = await dispatch_rpc(
                         dispatcher,
-                        payload
+                        cast(RPCRequest, payload)
                     )
 
                     if isinstance(payload, RPCRequest):
-                        response.append(response)
+                        batch_response.append(response)
 
                 await emit_message(cast(RPCPayload,
                     batch_response
@@ -184,7 +187,9 @@ async def handle_spokes(
     except Exception as err:
         logger.exception(f"[CONNECTION] Unexpected error from {spoke}: {err}")
     finally:
-        connection: ApplicationConnection = find_connection_by_writer(writer)
+        connection: Optional[
+            ApplicationConnection
+        ] = find_connection_by_writer(writer)
 
         if connection:
             remove_connection(connection)
