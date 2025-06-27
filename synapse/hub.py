@@ -7,18 +7,21 @@ TCP stream using asyncio streams.
 
 import asyncio
 import logging
-from typing import Optional, Tuple, List, cast
-
+from typing import Optional, Tuple, List, Set, cast
 
 from .utils.emit_utils import emit_message
 from .config.db_config import SessionLocal
 from .config.dispatch_config import dispatcher
+from .utils.dispatch_utils import dispatch_rpc
 from .utils.payload_utils import decode_payload
-from .utils.dispatch_utils import dispatch_rpcs
-from .types.rpc_types import RPCAction, RPCBatchData, RPCPayload
-from .utils.connection_utils import ConnectedApplicationRegistry
-from .schemas.application_connection_shema import ConnectedApplication
+from .types.rpc_types import RPCBatchData, RPCPayload, RPCAction
 from .services.permission_services import find_authorized_applications
+from .schemas.application_connection_schema import ApplicationConnection
+from .services.connection_services import (
+    find_connections,
+    remove_connection,
+    find_connection_by_writer
+)
 from .schemas.rpc_schema import (
     RPCNotification,
     RPCResponse,
@@ -28,11 +31,36 @@ from .schemas.rpc_schema import (
 
 
 logger: logging.Logger = logging.getLogger(__name__)
-connected_applications: ConnectedApplication = ConnectedApplicationRegistry()
 
 
-def get_authorized_writers() -> set[asyncio.StreamWriter]:
-    return
+def find_authorized_writers(
+    target_id: Optional[str],
+    action: RPCAction,
+) -> Set[asyncio.StreamWriter]:
+    """
+    Find writers authorized to perform an action on a target.
+
+    Args:
+        target_id (Optional[str]): The target application ID
+        action (RPCAction): The RPC action to check authorization for
+
+    Returns:
+        Set[asyncio.StreamWriter]: Set of authorized writers
+    """
+
+    authorized_writers: Set[asyncio.StreamWriter] = set()
+
+    with SessionLocal() as db:
+        authorized_app_ids = {
+            app.id
+            for app in find_authorized_applications(db, target_id, action)
+        }
+
+        for connection in find_connections():
+            if connection.id in authorized_app_ids:
+                authorized_writers.add(connection.writer)
+
+    return authorized_writers
 
 
 async def handle_spokes(
@@ -42,8 +70,8 @@ async def handle_spokes(
     """
     Handles an individual JSON-RPC session with a connected application.
 
-    Reads a single payload from the TCP stream, determines its type
-    (notification, request, or response), and dispatches or broadcasts
+    Reads payload from the TCP stream, determines its type
+    (notification, request, or response), and dispatches and broadcasts
     accordingly.
 
     Args:
@@ -57,66 +85,107 @@ async def handle_spokes(
     try:
         initial_payload: Optional[RPCPayload] = await decode_payload(reader)
 
-        if not initial_payload:
+        if not isinstance(initial_payload, RPCRequest):
+            logger.error(
+                "[CONNECTION] Rejected: Initial payload was not an RPCRequest"
+            )
             return None
 
-        if isinstance(initial_payload, RPCRequest):
-            await emit_message(initial_payload, get_authorized_writers())
-
-            response: List[RPCResponse] = await dispatch_rpcs(
-                dispatcher,
-                cast(RPCRequest, initial_payload)
+        if initial_payload.method not in ["connect", "register"]:
+            logger.error(
+                "[CONNECTION] Rejected: invalid request method"
             )
+            return None
 
-            await emit_message(
-                cast(RPCPayload, response),
-                get_authorized_writers()
+        init_response: RPCResponse = await dispatch_rpc(
+            dispatcher,
+            cast(RPCRequest, initial_payload)
+        )
+
+        await emit_message(
+            cast(RPCPayload, init_response),
+            find_authorized_writers(
+                target_id=None,
+                action=RPCAction.OUTBOUND_RESPONSE
             )
-        else:
-            logger.info("")
+        )
+
+        if init_response.error:
+            logger.error(
+                f"[CONNECTION] Initialization failed: {init_response.error}"
+            )
+            return None
+
+
+        connection: ApplicationConnection = find_connection_by_writer(writer)
+
+        if not connection:
+            logger.warning(
+                f"[CONNECTION] Spoke {spoke} is not registered in connections"
+            )
+            return None
 
         while True:
             payload: Optional[RPCPayload] = await decode_payload(reader)
 
-            if not payload:
-                continue
+            batch_payload: RPCBatchData = cast(RPCBatchData,
+                [payload] if not isinstance(payload, list) else payload
+            )
 
-            if isinstance(payload, RPCNotification):
-                await emit_message(payload, get_authorized_writers())
-            else:
-                batch_payload: RPCBatchData = cast(RPCBatchData,
-                    [payload] if not isinstance(payload, list) else payload
-                )
+            if all(isinstance(p, RPCResponse) for p in batch_payload):
+                await emit_message((
+                    batch_payload
+                    if len(batch_payload) > 1 else batch_payload[0]
+                ), find_authorized_writers(
+                    target_id=connection.id,
+                    action=RPCAction.OUTBOUND_RESPONSE
+                ))
+            elif all(isinstance(p, RPCNotification) for p in batch_payload):
+                batch_response: List[RPCResponse] =  []
 
-                if all(isinstance(p, RPCResponse) for p in batch_payload):
-                    await emit_message((
-                        batch_payload
-                        if len(batch_payload) > 1 else batch_payload[0]
-                    ), get_authorized_writers())
-                elif all(isinstance(p, RPCRequest) for p in batch_payload):
-                    await emit_message((
-                            batch_payload
-                            if len(batch_payload) > 1 else batch_payload[0]
-                        ), get_authorized_writers())
+                await emit_message((
+                    batch_payload
+                    if len(batch_payload) > 1 else batch_payload[0]
+                ), find_authorized_writers(
+                    target_id=connection.id,
+                    action=RPCAction.OUTBOUND_RESPONSE
+                ))
 
-                    response: List[RPCResponse] = await dispatch_rpcs(
+                for payload in batch_payload:
+                    response: RPCResponse = await dispatch_rpc(
                         dispatcher,
-                        *cast(List[RPCRequest], batch_payload)
+                        payload
                     )
 
-                    await emit_message(cast(RPCPayload,
-                        response if len(response) > 1 else response[0]
-                    ), get_authorized_writers())
-                else:
-                    await emit_message(RPCResponse(
-                        id=None,
-                        error=RPCError(
-                            code=-32603,
-                            message=f"Invalid Request(s): {batch_payload}"
-                        )
-                    ), get_authorized_writers())
+                    if isinstance(payload, RPCRequest):
+                        response.append(response)
+
+                await emit_message(cast(RPCPayload,
+                    batch_response
+                    if len(batch_response) > 1 else batch_response[0]
+                ), find_authorized_writers(
+                    target_id=connection.id,
+                    action=RPCAction.INBOUND_RESPONSE
+                ))
+            else:
+                await emit_message(RPCResponse(
+                    id=None,
+                    error=RPCError(
+                        code=-32603,
+                        message=f"Invalid Request(s): {batch_payload}"
+                    )
+                ), find_authorized_writers(
+                    target_id=connection.id,
+                    action=RPCAction.INBOUND_RESPONSE
+                ))
 
     except asyncio.IncompleteReadError as err:
         logger.error(f"[CONNECTION] {spoke} disconnected unexpectedly: {err}")
     except Exception as err:
         logger.exception(f"[CONNECTION] Unexpected error from {spoke}: {err}")
+    finally:
+        connection: ApplicationConnection = find_connection_by_writer(writer)
+
+        if connection:
+            remove_connection(connection)
+            logger.info(f"[CONNECTION] spoke {spoke} disconnected")
