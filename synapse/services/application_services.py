@@ -87,7 +87,7 @@ def create_application(
     is_admin: bool = False
 ) -> Optional[Application]:
     """
-    Create a new application with URL and optional authentication token.
+    Create a new application.
 
     Args:
         db (Session): SQLAlchemy database session
@@ -117,10 +117,13 @@ def create_application(
         app = Application(
             name=name.strip(),
             description=description.strip() if description else "",
-            server_url=server_url.strip(),
-            password=password.strip() if password else None,
+            server_url=server_url.strip() if server_url else None,
             is_admin=is_admin
         )
+
+        if password:
+            app.password = password.strip()
+
         db.add(app)
         db.commit()
         db.refresh(app)
