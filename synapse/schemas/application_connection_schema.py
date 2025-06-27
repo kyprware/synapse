@@ -12,11 +12,11 @@ class ApplicationConnection(BaseModel):
     Represents a connected application.
 
     Attributes:
-        id (str): The unique identifier of the connected application.
+        id (int): The unique identifier of the connected application.
         writer (StreamWriter): The stream writer used to communicate with the application.
     """
 
-    id: str
+    id: int
     writer: StreamWriter
 
 

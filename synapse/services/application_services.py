@@ -13,14 +13,14 @@ QueryMethod = Callable[[Query[Application]], Query[Application]]
 
 def find_application_by_id(
     db: Session,
-    app_id: str
+    app_id: int
 ) -> Optional[Application]:
     """
     Find an application by its ID.
 
     Args:
         db (Session): SQLAlchemy database session
-        app_id (str): The ID of the application to retrieve
+        app_id (int): The ID of the application to retrieve
 
     Returns:
         Optional[Application]: The Application object or None if not found
@@ -137,7 +137,7 @@ def create_application(
 
 def update_application(
     db: Session,
-    app_id: str,
+    app_id: int,
     updates: Dict[str, Any]
 ) -> Optional[Application]:
     """
@@ -145,7 +145,7 @@ def update_application(
 
     Args:
         db (Session): SQLAlchemy database session
-        app_id (str): The ID of the application to update
+        app_id (int): The ID of the application to update
         updates (Dict[str, Any]): Dictionary of fields to update
 
     Returns:
@@ -193,13 +193,13 @@ def update_application(
         return None
 
 
-def delete_application(db: Session, app_id: str) -> bool:
+def delete_application(db: Session, app_id: int) -> bool:
     """
     Permanently remove an application and all its permissions.
 
     Args:
         db (Session): SQLAlchemy database session
-        app_id (str): The ID of the application to delete
+        app_id (int): The ID of the application to delete
 
     Returns:
         bool: True if deletion was successful, False otherwise

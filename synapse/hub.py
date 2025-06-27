@@ -35,7 +35,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 def find_authorized_writers(
-    target_id: Optional[str],
+    target_id: Optional[int],
     action: RPCAction,
 ) -> Set[asyncio.StreamWriter]:
     """

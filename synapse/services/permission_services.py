@@ -19,14 +19,14 @@ QueryMethod = Callable[
 
 def find_permission_by_id(
     db: Session,
-    permission_id: str
+    permission_id: int
 ) -> Optional[ApplicationPermission]:
     """
     Find a specific permission by its ID.
 
     Args:
         db (Session): SQLAlchemy database session
-        permission_id (str): The ID of the permission to retrieve
+        permission_id (id): The ID of the permission to retrieve
 
     Returns:
         Optional[ApplicationPermission]: The permission object if found,
@@ -99,8 +99,8 @@ def find_permissions(
 
 def grant_permission(
     db: Session,
-    owner_id: str,
-    target_id: str,
+    owner_id: int,
+    target_id: int,
     action: RPCAction
 ) -> Optional[ApplicationPermission]:
     """
@@ -108,8 +108,8 @@ def grant_permission(
 
     Args:
         db (Session): SQLAlchemy database session
-        owner_id (str): The ID of the application granting the permission
-        target_id (str): The ID of the application receiving the permission
+        owner_id (int): The ID of the application granting the permission
+        target_id (int): The ID of the application receiving the permission
         action (RPCAction): The action being permitted
 
     Returns:
@@ -188,14 +188,14 @@ def grant_permission(
 
 def revoke_permission(
     db: Session,
-    permission_id: str
+    permission_id: int
 ) -> bool:
     """
     Remove a specific permission by its ID.
 
     Args:
         db (Session): SQLAlchemy database session
-        permission_id (str): The ID of the permission to revoke
+        permission_id (int): The ID of the permission to revoke
 
     Returns:
         bool: True if revocation was successful, False otherwise
@@ -227,7 +227,7 @@ def revoke_permission(
 
 def find_authorized_applications(
     db: Session,
-    target_id: Optional[str],
+    target_id: Optional[int],
     action: RPCAction,
     active_only: bool = True
 ) -> List[Application]:
@@ -238,7 +238,7 @@ def find_authorized_applications(
 
     Args:
         db (Session): SQLAlchemy database session
-        target_id (Optional[str]): The ID of the target application
+        target_id (Optional[int]): The ID of the target application
         action (RPCAction): The action to check authorization for
         active_only (bool): If True, only consider active permissions
 

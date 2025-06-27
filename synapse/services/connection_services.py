@@ -23,7 +23,7 @@ def find_connection_by_writer(
         writer (asyncio.StreamWriter): The stream writer to search for
 
     Returns:
-        Optional[ApplicationConnection]: The connection if found, None otherwise
+        Optional[ApplicationConnection]: The connection if found else None
     """
 
     for connection in connections:
@@ -33,12 +33,12 @@ def find_connection_by_writer(
     return None
 
 
-def find_connection_by_id(id: str) -> Optional[ApplicationConnection]:
+def find_connection_by_id(id: int) -> Optional[ApplicationConnection]:
     """
     Find connection by its ID.
 
     Args:
-        id (str): The connection ID to search for
+        id (int): The connection ID to search for
 
     Returns:
         Optional[ApplicationConnection]: The connection if found, None otherwise
@@ -88,14 +88,14 @@ def find_connections(
 
 
 def add_connection(
-    id: str,
+    id: int,
     writer: asyncio.StreamWriter
 ) -> ApplicationConnection:
     """
     Add a new connection.
 
     Args:
-        id (str): Unique identifier for the connection
+        id (int): Unique identifier for the connection
         writer (asyncio.StreamWriter): Stream writer for the connection
 
     Returns:

@@ -38,12 +38,12 @@ class RPCRequest(RPCNotification):
 
     Fields:
         jsonrpc (str): JSON-RPC version. Defaults to "2.0".
-        id (str | None): Optional request identifier.
+        id (int | str | None): Optional request identifier.
         method (str): Name of the method to be invoked.
         params (dict | None): Optional parameters for the method.
     """
 
-    id: Union[str, None]
+    id: Union[int, str, None]
 
 
 class RPCError(BaseModel):
@@ -85,13 +85,13 @@ class RPCResponse(RPCResponseData):
 
     Fields:
         jsonrpc (str): JSON-RPC version. Defaults to "2.0".
-        id (str | None): The ID of the request.
+        id (ind | str | None): The ID of the request.
         result (Any | None): Result returned by the method, if successful.
         error (RPCError | None): Error object, if an error occurred.
     """
 
     jsonrpc: str = "2.0"
-    id: Union[str, None]
+    id: Union[int, str, None]
 
     @field_validator("jsonrpc")
     @classmethod

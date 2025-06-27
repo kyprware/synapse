@@ -136,7 +136,7 @@ class Application(Base):
         """
 
         return {
-            "id": str(self.id),
+            "id": self.id,
             "name": self.name,
             "description": self.description,
             "server_url": self.server_url,
