@@ -8,7 +8,6 @@ import json
 import struct
 import asyncio
 import logging
-
 from typing import Optional, Union, Any, Dict, cast
 
 from pydantic import BaseModel
