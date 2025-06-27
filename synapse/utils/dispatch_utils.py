@@ -106,68 +106,60 @@ class DispatchManager:
         logger.info(f"[DISPATCH] Loaded {len(self._registry)} RPC handlers")
 
 
-async def dispatch_rpcs(
+async def dispatch_rpc(
     dispatcher: DispatchManager,
-    *requests: RPCRequest
-) -> List[RPCResponse]:
+    request: RPCRequest
+) -> RPCResponse:
     """
-    Dispatch multiple RPC requests to their corresponding handler functions.
+    Dispatch an RPC request to a corresponding handler functions.
 
     Args:
         dispatcher (DispatchManager): The registered dispatcher instance.
-        *requests (RPCRequest): One or more parsed RPC request objects.
+        request (RPCRequest): an RPC request objects.
 
     Returns:
-        List[RPCResponse]: A list of RPC response objects.
+        RPCResponse: An RPC response objects.
     """
 
-    responses: List[RPCResponse] = []
+    handler = dispatcher.get_handler(request.method)
 
-    for request in requests:
-        handler = dispatcher.get_handler(request.method)
-
-        if not handler:
-            responses.append(RPCResponse(
-                jsonrpc=request.jsonrpc,
-                id=request.id,
-                error=RPCError(
-                    code=-32601,
-                    message=f"Method '{request.method}' not found"
-                )
-            ))
-            logger.warning(f"[DISPATCH] Unknown method: {request.method}")
-            continue
-
-        try:
-            response = await handler(**request.params or {})
-
-            responses.append(RPCResponse(
-                id=request.id,
-                error=response.error,
-                result=response.result,
-            ))
-        except TypeError as err:
-            responses.append(RPCResponse(
-                jsonrpc=request.jsonrpc,
-                id=request.id,
-                error=RPCError(
-                    code=-32602,
-                    message=f"Invalid params: {err}"
-                )
-            ))
-            logger.error(
-                f"[DISPATCH] Param error in '{request.method}': {err}"
+    if not handler:
+        logger.warning(f"[DISPATCH] Unknown method: {request.method}")
+        return RPCResponse(
+            jsonrpc=request.jsonrpc,
+            id=request.id,
+            error=RPCError(
+                code=-32601,
+                message=f"Method '{request.method}' not found"
             )
+        )
 
-        except Exception as err:
-            responses.append(RPCResponse(
-                jsonrpc=request.jsonrpc,
-                id=request.id,
-                error=RPCError(
-                    code=-32603,
-                    message=f"Internal error: {err}"
-                )
-            ))
-            logger.exception(f"[DISPATCH] Exception in '{request.method}'")
 
-    return responses
+    try:
+        response = await handler(**request.params or {})
+
+        return RPCResponse(
+            id=request.id,
+            error=response.error,
+            result=response.result,
+        )
+    except TypeError as err:
+        logger.error(f"[DISPATCH] Param error in '{request.method}': {err}")
+        return RPCResponse(
+            jsonrpc=request.jsonrpc,
+            id=request.id,
+            error=RPCError(
+                code=-32602,
+                message=f"Invalid params: {err}"
+            )
+        )
+    except Exception as err:
+        logger.exception(f"[DISPATCH] Exception in '{request.method}'")
+        return RPCResponse(
+            jsonrpc=request.jsonrpc,
+            id=request.id,
+            error=RPCError(
+                code=-32603,
+                message=f"Internal error: {err}"
+            )
+        )
