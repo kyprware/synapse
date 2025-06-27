@@ -1,5 +1,4 @@
 import logging
-
 from typing import Final, TYPE_CHECKING
 
 from sqlalchemy import (
@@ -12,11 +11,10 @@ from sqlalchemy import (
     CheckConstraint,
     UniqueConstraint
 )
-from sqlalchemy.orm import Mapped, validates, relationship, mapped_column
+from sqlalchemy.orm import Mapped, relationship, mapped_column
 
 from .base_model import Base
 from ..types.rpc_types import RPCAction
-from ..utils.validator_utils import validate_uuid
 
 if TYPE_CHECKING:
     from .application_model import Application
@@ -103,18 +101,6 @@ class ApplicationPermission(Base):
             f"active={self.is_active}"
             ")>"
         )
-
-
-    @validates("owner_id", "target_id")
-    def validate_uuid_fields(self, key: str, value: str) -> str:
-        """
-        Validate application and target uuids
-        """
-
-        if not value or not value.strip():
-            raise ValueError(f"{key} cannot be empty")
-
-        return validate_uuid(key, value)
 
 
     def to_dict(self) -> dict:
