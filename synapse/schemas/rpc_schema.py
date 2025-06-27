@@ -13,7 +13,27 @@ from ..utils.validator_utils import (
 )
 
 
-class RPCRequest(BaseModel):
+class RPCNotification(BaseModel):
+    """
+    JSON-RPC 2.0 notification schema (no response expected).
+
+    Fields:
+        jsonrpc (str): JSON-RPC version. Defaults to "2.0".
+        method (str): Name of the method to be invoked.
+        params (dict | None): Optional parameters for the method.
+    """
+
+    jsonrpc: str = "2.0"
+    method: str
+    params: Optional[dict[str, Any]] = None
+
+    @field_validator("jsonrpc")
+    @classmethod
+    def validate_jsonrpc(cls, v: str) -> str:
+        return validate_jsonrpc_version("jsonrpc", v)
+
+
+class RPCRequest(RPCNotification):
     """
     JSON-RPC 2.0 request schema for authenticated method calls.
 
@@ -24,16 +44,7 @@ class RPCRequest(BaseModel):
         params (dict | None): Optional parameters for the method.
     """
 
-    jsonrpc: str = "2.0"
     id: Union[str, None]
-    method: str
-    params: Optional[dict[str, Any]] = None
-
-    @field_validator("jsonrpc")
-    @classmethod
-    def validate_jsonrpc(cls, v: str) -> str:
-        return validate_jsonrpc_version("jsonrpc", v)
-
 
     @field_validator("id")
     @classmethod
@@ -98,23 +109,3 @@ class RPCResponse(RPCResponseData):
     @classmethod
     def validate_id(cls, v: Union[str, None]) -> Union[str, None]:
         return validate_uuid("id", v) if v else None
-
-
-class RPCNotification(BaseModel):
-    """
-    JSON-RPC 2.0 notification schema (no response expected).
-
-    Fields:
-        jsonrpc (str): JSON-RPC version. Defaults to "2.0".
-        method (str): Name of the method to be invoked.
-        params (dict | None): Optional parameters for the method.
-    """
-
-    jsonrpc: str = "2.0"
-    method: str
-    params: Optional[dict[str, Any]] = None
-
-    @field_validator("jsonrpc")
-    @classmethod
-    def validate_jsonrpc(cls, v: str) -> str:
-        return validate_jsonrpc_version("jsonrpc", v)
