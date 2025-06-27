@@ -18,6 +18,7 @@ class ApplicationConnection(BaseModel):
 
     id: int
     writer: StreamWriter
+    authentication_token: str
 
 
     class Config:
@@ -26,27 +27,27 @@ class ApplicationConnection(BaseModel):
 
     def __eq__(self, other: object) -> bool:
         """
-        Compares two ConnectedApplication instances based on their ID.
+        Compares two ApplicationConnection instances based on ID and writer.
 
         Args:
             other (object): Another object to compare against.
 
         Returns:
-            bool: True if the other object is the same ID, False otherwise.
+            bool: True if the other object are the same, False otherwise.
         """
 
         if not isinstance(other, ApplicationConnection):
             return False
 
-        return self.id == other.id
+        return self.id == other.id and self.writer == other.writer
 
 
     def __hash__(self) -> int:
         """
-        Computes a hash value based on its ID.
+        Computes a hash value based on ID and writer.
 
         Returns:
-            int: Hash of the application ID.
+            int: Hash combining the application ID and writer.
         """
 
-        return hash(self.id)
+        return hash((self.id, self.writer))
