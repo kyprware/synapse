@@ -34,8 +34,9 @@ class ApplicationConnection(BaseModel):
             bool: True if the other object is the same ID, False otherwise.
         """
 
-        if not isinstance(other, ConnectedApplication):
+        if not isinstance(other, ApplicationConnection):
             return False
+
         return self.id == other.id
 
 
