@@ -6,7 +6,7 @@ import bcrypt
 import logging
 from typing import Final, Optional, TYPE_CHECKING
 
-from sqlalchemy import Integer, String, Boolean, JSON
+from sqlalchemy import Integer, String, Boolean
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base_model import Base
@@ -41,11 +41,6 @@ class Application(Base):
     server_url: Mapped[Optional[str]] = mapped_column(
         String,
         nullable=True
-    )
-    capability_schema_urls: Mapped[Optional[list[str]]] = mapped_column(
-        JSON,
-        nullable=True,
-        default=list
     )
     _password_hash: Mapped[Optional[str]] = mapped_column(
         "password_hash",
@@ -145,7 +140,6 @@ class Application(Base):
             "name": self.name,
             "description": self.description,
             "server_url": self.server_url,
-            "capability_schema_urls": self.capability_schema_urls,
             "is_admin": self.is_admin,
             "is_active": self.is_active,
         }
@@ -166,7 +160,6 @@ class Application(Base):
                 "name",
                 "description",
                 "server_url",
-                "capability_schema_urls",
                 "is_admin",
                 "is_active"
             } and hasattr(self, field):
