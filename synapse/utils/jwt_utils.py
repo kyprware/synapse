@@ -8,7 +8,6 @@ based on a secret and algorithm defined in environment variables.
 import jwt
 import logging
 from os import getenv
-
 from typing import List, Dict, Any
 
 
