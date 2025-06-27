@@ -1,14 +1,15 @@
-import uuid
-import base64
-import logging
+"""
+Application model module for SQLAlchemy ORM.
+"""
 
+import bcrypt
+import logging
 from typing import Final, Optional, TYPE_CHECKING
 
-from sqlalchemy import Index, String, Boolean
-from sqlalchemy.orm import Mapped, validates, relationship, mapped_column
+from sqlalchemy import Integer, String, Boolean
+from sqlalchemy.orm import Mapped, validates, mapped_column, relationship
 
 from .base_model import Base
-from ..config.encryption_config import cipher
 from ..utils.validator_utils import validate_url
 
 if TYPE_CHECKING:
@@ -25,14 +26,10 @@ class Application(Base):
 
     __tablename__: str = "applications"
 
-    __table_args__ = (
-        Index("idx_active_admin", "is_active", "is_admin")
-    )
-
-    id: Mapped[str] = mapped_column(
-        String,
+    id: Mapped[int] = mapped_column(
+        Integer,
         primary_key=True,
-        default=lambda: str(uuid.uuid4())
+        autoincrement=True
     )
     name: Mapped[str] = mapped_column(
         String,
@@ -46,19 +43,18 @@ class Application(Base):
         String,
         nullable=True
     )
-    auth_token: Mapped[Optional[str]] = mapped_column(
+    _password_hash: Mapped[Optional[str]] = mapped_column(
+        "password_hash",
         String,
         nullable=True
     )
     is_admin: Mapped[bool] = mapped_column(
         Boolean,
-        index=True,
         default=False,
         nullable=False
     )
     is_active: Mapped[bool] = mapped_column(
         Boolean,
-        index=True,
         default=True,
         nullable=False
     )
@@ -79,95 +75,84 @@ class Application(Base):
     )
 
 
-    def __repr__(self) -> str:
+    @property
+    def password(self) -> None:
         """
-        String representation of model object
+        Password is write-only.
         """
 
-        return (
-            "<Application("
-            f"id='{self.id}' "
-            f"name='{self.name}' "
-            f"is_admin={self.is_admin} "
-            f"is_active={self.is_active}"
-            ")>"
-        )
+        raise AttributeError("Password is not readable")
+
+
+    @password.setter
+    def password(self, password: str) -> None:
+        """
+        Auto-hash password when set.
+
+        Args:
+            password (str): Plain text password to hash
+        """
+
+        if password:
+            salt = bcrypt.gensalt()
+
+            self._password_hash = bcrypt.hashpw(
+                password.encode("utf-8"),
+                salt
+            ).decode("utf-8")
+        else:
+            self._password_hash = None
+
+
+    def verify_password(self, password: str) -> bool:
+        """
+        Verify password against stored hash.
+
+        Args:
+            password (str): Password to verify
+
+        Returns:
+            bool: True if password matches, False otherwise
+        """
+
+        if not self._password_hash:
+            return not password
+
+        try:
+            return bcrypt.checkpw(
+                password.encode("utf-8"),
+                self._password_hash.encode("utf-8")
+            )
+        except Exception as err:
+            logger.error(f"Password verification failed for application {err}")
+            return False
 
 
     @validates("server_url")
     def validate_url_field(self, key: str, value: str) -> str:
         """
-        Validate application server url
+        Validate application server URL field.
+
+        Args:
+            key (str): The field name being validated.
+            value (str): The URL value to validate.
+
+        Returns:
+            str: The validated URL value.
         """
 
         return validate_url(key, value)
 
 
-    @validates("auth_token")
-    def encrypt_token(self, _: str, value: Optional[str]) -> Optional[str]:
-        """
-        Encrypts the authentication token before storing it.
-        """
-
-        if value and not self._is_already_encrypted(value):
-            try:
-                encrypted_bytes: bytes = cipher.encrypt(value.encode("utf-8"))
-                return base64.b64encode(encrypted_bytes).decode("utf-8")
-            except Exception as err:
-                logger.debug(f"[Model] Encryption failed: {err}")
-                raise ValueError(
-                    f"Failed to encrypt authentication token: {err}"
-                )
-
-        return value
-
-
-    def _is_already_encrypted(self, value: str) -> bool:
-        """
-        Checks whether a given string is already encrypted.
-        """
-
-        try:
-            encrypted_bytes: bytes = base64.b64decode(value)
-            cipher.decrypt(encrypted_bytes)
-            return True
-        except Exception as err:
-            logger.debug(f"[Model] Failed to assert token encrypted: {err}")
-            raise ValueError(f"Failed to assert if token is encrypted: {err}")
-
-        return False
-
-
-    @property
-    def decrypted_auth_token(self) -> Optional[str]:
-        """
-        Decrypts and returns the authentication token.
-        """
-
-        if self.auth_token:
-            try:
-                decoded_bytes: bytes = base64.b64decode(self.auth_token)
-                return cipher.decrypt(decoded_bytes).decode("utf-8")
-            except Exception as err:
-                logger.error(
-                    f"[Model] Failed to decrypt token for app {self.id}: {err}"
-                )
-
-        return None
-
-
-    def to_dict(self, include_auth_token: bool = False) -> dict:
+    def to_dict(self) -> dict:
         """
         Convert application to dictionary representation.
 
-        Args:
-            include_token (bool): Whether to include the decrypted token
-
         Returns:
-            dict: Dictionary representation of the application
+            dict: Dictionary representation of the application.
         """
 
-        result = {
+        return {
             "id": str(self.id),
             "name": self.name,
             "description": self.description,
@@ -176,29 +161,41 @@ class Application(Base):
             "is_active": self.is_active,
         }
 
-        if include_auth_token:
-            result["auth_token"] = self.decrypted_auth_token
-
-        return result
-
 
     def update_from_dict(self, data: dict) -> None:
         """
         Update application from dictionary data.
 
         Args:
-            data (dict): Dictionary containing fields to update
+            data (dict): Dictionary containing field names as keys and values.
         """
 
-        allowed_fields = {
-            "name",
-            "description",
-            "server_url",
-            "auth_token",
-            "is_admin",
-            "is_active"
-        }
-
         for field, value in data.items():
-            if field in allowed_fields and hasattr(self, field):
+            if field == "password" and value:
+                self.password = value
+            elif field in {
+                "name",
+                "description", 
+                "server_url",
+                "is_admin",
+                "is_active"
+            } and hasattr(self, field):
                 setattr(self, field, value)
+
+
+    def __repr__(self) -> str:
+        """
+        String representation of Application model.
+
+        Returns:
+            str: String representation of the application instance.
+        """
+
+        return (
+            f"<Application("
+            f"id={self.id}, "
+            f"name='{self.name}', "
+            f"is_admin={self.is_admin}, "
+            f"is_active={self.is_active}"
+            f")>"
+        )
