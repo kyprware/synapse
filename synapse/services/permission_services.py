@@ -227,7 +227,7 @@ def revoke_permission(
 
 def find_authorized_applications(
     db: Session,
-    target_id: str,
+    target_id: Optional[str],
     action: RPCAction,
     active_only: bool = True
 ) -> List[Application]:
@@ -238,7 +238,7 @@ def find_authorized_applications(
 
     Args:
         db (Session): SQLAlchemy database session
-        target_id (str): The UUID of the target application
+        target_id (Optional[str]): The ID of the target application
         action (RPCAction): The action to check authorization for
         active_only (bool): If True, only consider active permissions
 
@@ -249,28 +249,29 @@ def find_authorized_applications(
     try:
         authorized_apps = set()
 
-        def target_permission_filter(query):
-            filtered_query = query.filter_by(
-                target_id=target_id,
-                action=action
-            )
-
-            if active_only:
-                filtered_query = filtered_query.filter(
-                    ApplicationPermission.is_active.is_(True)
+        if target_id != None:
+            def target_permission_filter(query):
+                filtered_query = query.filter_by(
+                    target_id=target_id,
+                    action=action
                 )
 
-            return filtered_query
+                if active_only:
+                    filtered_query = filtered_query.filter(
+                        ApplicationPermission.is_active.is_(True)
+                    )
 
-        target_permissions = find_permissions(
-            db=db,
-            filter_fn=target_permission_filter
-        )
+                return filtered_query
 
-        for permission in target_permissions:
-            owner_app = find_application_by_id(db, permission.owner_id)
-            if owner_app:
-                authorized_apps.add(owner_app)
+            target_permissions = find_permissions(
+                db=db,
+                filter_fn=target_permission_filter
+            )
+
+            for permission in target_permissions:
+                owner_app = find_application_by_id(db, permission.owner_id)
+                if owner_app:
+                    authorized_apps.add(owner_app)
 
         admin_apps = find_applications(
             db=db,
