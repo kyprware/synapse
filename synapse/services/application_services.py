@@ -83,7 +83,7 @@ def create_application(
     name: str,
     description: str,
     server_url: str,
-    auth_token: Optional[str] = None,
+    password: Optional[str] = None,
     is_admin: bool = False
 ) -> Optional[Application]:
     """
@@ -94,12 +94,12 @@ def create_application(
         name (str): Name of the application
         description (str): Description of the application and what it does
         server_url (str): The application's server URL
-        auth_token (Optional[str]): Optional authentication token
+        password (Optional[str]): Optional password
         is_admin (bool): If the application has SYNAPSE admin permissions
 
     Returns:
         Optional[Application]: The created Application object or None if
-        creation failed
+            creation failed
 
     Raises:
         ValueError: If validation fails
@@ -118,7 +118,7 @@ def create_application(
             name=name.strip(),
             description=description.strip() if description else "",
             server_url=server_url.strip(),
-            auth_token=auth_token.strip() if auth_token else None,
+            password=password.strip() if password else None,
             is_admin=is_admin
         )
         db.add(app)
