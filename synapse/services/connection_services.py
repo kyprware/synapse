@@ -2,25 +2,24 @@
 Application connection management services.
 """
 
-import asyncio
-import logging
+from asyncio import StreamWriter
 from typing import Optional, Callable, Set, List, Any
 
+from ..utils.jwt_utils import decode_token
 from ..schemas.application_connection_schema import ApplicationConnection
 
 
-logger = logging.getLogger(__name__)
 connections: Set[ApplicationConnection] = set()
 
 
 def find_connection_by_writer(
-    writer: asyncio.StreamWriter
+    writer: StreamWriter
 ) -> Optional[ApplicationConnection]:
     """
     Find connection by its writer.
 
     Args:
-        writer (asyncio.StreamWriter): The stream writer to search for
+        writer (StreamWriter): The stream writer to search for
 
     Returns:
         Optional[ApplicationConnection]: The connection if found else None
@@ -89,39 +88,66 @@ def find_connections(
 
 def add_connection(
     id: int,
-    writer: asyncio.StreamWriter
+    writer: StreamWriter,
+    authentication_token: str
 ) -> ApplicationConnection:
     """
     Add a new connection.
 
     Args:
         id (int): Unique identifier for the connection
-        writer (asyncio.StreamWriter): Stream writer for the connection
+        writer (StreamWriter): Stream writer for the connection
+        authentication_token (str): JWT token representing the user session.
 
     Returns:
         ApplicationConnection: The created connection object
     """
 
-    connection = ApplicationConnection(id=id, writer=writer)
+    connection = ApplicationConnection(
+        id=id,
+        writer=writer,
+        session=decode_token(authentication_token)
+    )
+
     connections.add(connection)
-    logger.info(f"[CONNECTIONS] Added connection: {id}")
     return connection
 
 
-def remove_connection(connection: ApplicationConnection) -> bool:
+def remove_connection_by_id(id: int) -> bool:
     """
-    Remove a connection.
+    Remove a connection by id.
 
     Args:
-        connection (ApplicationConnection): The connection to remove
+        id (int): The connection ID of connection to remove
 
     Returns:
         bool: True if connection was removed, False otherwise
     """
 
-    if connection in connections:
+    connection = find_connection_by_id(id)
+
+    if connection:
         connections.discard(connection)
-        logger.info(f"[CONNECTIONS] Removed connection: {connection.id}")
+        return True
+
+    return False
+
+
+def remove_connection_by_writer(writer: StreamWriter) -> bool:
+    """
+    Remove a connection by stream writer.
+
+    Args:
+        writer (StreamWriter): The stream writer of connection to remove
+
+    Returns:
+        bool: True if connection was removed, False otherwise
+    """
+
+    connection = find_connection_by_writer(writer)
+
+    if connection:
+        connections.discard(connection)
         return True
 
     return False
