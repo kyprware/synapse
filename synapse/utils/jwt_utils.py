@@ -1,44 +1,52 @@
 """
-Handle JWT authentication logic.
+JWT utility functions using a structured TokenData model.
 
-This module provides a utility function to verify and decode JSON Web Tokens
-based on a secret and algorithm defined in environment variables.
+Provides encode and decode functions with type safety and validation.
 """
 
 import jwt
-import logging
 from os import getenv
-from typing import List, Dict, Any
+
+from ..schemas.application_connection_schema import ApplicationSession
 
 
 JWT_SECRET: str = getenv("JWT_SECRET", "secret")
-JWT_ALGORITHMS: List = getenv("JWT_ALGORITHM", "HS256").split(" ")
-
-logger: logging.Logger = logging.getLogger(__name__)
+JWT_ALGORITHM: str = getenv("JWT_ALGORITHM", "HS256")
 
 
-def verify_token(token: str) -> Dict[str, Any]:
+def encode_token(payload: ApplicationSession) -> str:
     """
-    Verifies and decodes a JWT token using the secret and algorithms.
+    Encodes a JWT token.
+
+    Args:
+        payload (ApplicationSession): Session data to encode.
+
+    Returns:
+        str: Encoded JWT token.
+    """
+
+    return jwt.encode(
+        payload.model_dump(),
+        JWT_SECRET,
+        algorithm=JWT_ALGORITHM
+    )
+
+
+def decode_token(token: str) -> ApplicationSession:
+    """
+    Decodes and verifies a JWT token.
 
     Args:
         token (str): The JWT token to verify.
 
     Returns:
-        dict: On success, returns the decoded token claims (payload).
-              On failure, returns a dict with an 'error'.
+        TokenData: Decoded token payload.
+
+    Raises:
+        jwt.ExpiredSignatureError: If the token has expired.
+        jwt.InvalidTokenError: If the token is invalid.
+        ValidationError: If decoded payload is invalid.
     """
 
-    try:
-        payload: Dict[str, Any] = jwt.decode(
-            token,
-            JWT_SECRET,
-            algorithms=JWT_ALGORITHMS
-        )
-        return payload
-    except jwt.ExpiredSignatureError:
-        logger.warning("[AUTH] Token has expired.")
-        return {"error": "Token expired"}
-    except jwt.InvalidTokenError:
-        logger.warning("[AUTH] Invalid JWT token.")
-        return {"error": "Invalid token"}
+    decoded = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+    return ApplicationSession(**decoded)
