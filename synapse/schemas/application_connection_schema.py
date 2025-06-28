@@ -7,6 +7,23 @@ from asyncio import StreamWriter
 from pydantic import BaseModel
 
 
+class ApplicationSession(BaseModel):
+    """
+    Represents session information for an authenticated application.
+
+    Attributes:
+        sub (int): Subject application ID.
+        iat (int): Issued At time.
+        name (str): Application name.
+        is_admin (bool): If the session is an admin session.
+    """
+
+    sub: int
+    iat: int
+    name: str
+    is_admin: bool
+
+
 class ApplicationConnection(BaseModel):
     """
     Represents a connected application.
@@ -14,11 +31,12 @@ class ApplicationConnection(BaseModel):
     Attributes:
         id (int): The unique identifier of the connected application.
         writer (StreamWriter): The stream writer used to communicate with the application.
+        session (ApplicationSession): application session info.
     """
 
     id: int
     writer: StreamWriter
-    authentication_token: str
+    session: ApplicationSession
 
 
     class Config:
